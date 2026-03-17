@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Logo and About Section */}
           <div className="space-y-4">
             <Link to="/">
-              <img src="/final-logo.png" alt="Grocery Store Logo" className="w-48 h-auto object-contain bg-white rounded-lg p-2" />
+              <img src="/logo-2.jpeg" alt="Grocery Store Logo" className="w-48 h-auto object-contain bg-white rounded-lg p-2" />
             </Link>
             <p className="text-xs md:text-sm">
               Your trusted online grocery store. We bring fresh vegetables, fruits, and daily essentials directly from the farm to your kitchen with love and care.

@@ -106,7 +106,7 @@ const LoginRegisterPage = () => {
   return (
     <div className="auth-page relative">
       <div className="absolute top-16 md:top-6 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm">
-        <img src="/final-logo.png" alt="Logo" className="h-10 md:h-16 w-auto object-contain mix-blend-multiply" />
+        <img src="/logo-2.jpeg" alt="Logo" className="h-10 md:h-16 w-auto object-contain mix-blend-multiply" />
       </div>
       <div className={`container ${isRegister ? "active" : ""}`}>
         {/* 🔹 Login Form */}

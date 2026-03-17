@@ -269,7 +269,7 @@ const Header = () => {
           className="flex items-center transition-all duration-300"
           aria-label="Gaon Se Ghar Tak Home"
         >
-          <img src="/logo-2.jpeg" alt="Gaon Se Ghar Tak" className="h-[45px] w-[160px] md:h-[50px] md:w-[200px] object-contain mix-blend-multiply" />
+          <img src="/logo-2.jpeg" alt="Gaon Se Ghar Tak" className="h-[42px] w-[150px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
         </Link>
 
         {/* Desktop Nav */}
@@ -435,7 +435,7 @@ const Header = () => {
           {/* Menu Header */}
           <div className="p-5 border-b flex items-center justify-between bg-gray-50">
             <Link to="/" onClick={toggleMenu}>
-              <img src="/logo-2.jpeg" alt="Logo" className="h-8 w-auto object-contain mix-blend-multiply" />
+              <img src="/logo-2.jpeg" alt="Logo" className="h-10 w-auto object-contain mix-blend-multiply" />
             </Link>
             <button onClick={toggleMenu} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors"><HiOutlineX className="w-6 h-6" /></button>
           </div>

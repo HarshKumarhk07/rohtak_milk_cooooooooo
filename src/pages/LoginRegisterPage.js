@@ -1,6 +1,6 @@
 import apiClient from '../services/apiClient';
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/auth.css";
 
@@ -23,6 +23,8 @@ const LoginRegisterPage = () => {
   const [signupError, setSignupError] = useState(false);
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false);
   const [isSignupSubmitting, setIsSignupSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [secretCode, setSecretCode] = useState("");
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -139,6 +141,9 @@ const LoginRegisterPage = () => {
                 <button type="button" onClick={handleLogin} className="btn" disabled={isLoginSubmitting}>
                   Login
                 </button>
+              </div>
+              <div className="forgot-pass" style={{ textAlign: "right", marginTop: "-10px", marginBottom: "15px" }}>
+                <Link to="/forgot-password" style={{ color: "white", fontSize: "14px", textDecoration: "none" }}>Forgot Password?</Link>
               </div>
 
               {isLoginSubmitting && (

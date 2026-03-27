@@ -41,6 +41,7 @@ import AppointmentBookingPage from "./pages/AppointmentBookingPage";
 import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 // Define the ScrollToTop component
 const ScrollToTop = () => {
@@ -85,6 +86,7 @@ function AppLayout() {
           <Route path="/my-appointments" element={<MyAppointmentsPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsConditionsPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Routes>
       </main>
       <Footer />

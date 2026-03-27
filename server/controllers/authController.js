@@ -55,7 +55,7 @@ exports.verifyOTP = async (req, res) => {
 };
 
 exports.signup = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+  const { name, email, password, phone, role, secretCode } = req.body;
   try {
     let user = await User.findOne({ email });
     if (user) {
@@ -63,6 +63,7 @@ exports.signup = async (req, res) => {
     }
 
     const userRole = role || 'customer';
+
     user = new User({ name, email, password, phone, role: userRole });
     await user.save();
 
@@ -85,6 +86,55 @@ exports.signup = async (req, res) => {
   }
 };
 
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.role === 'admin') {
+      return res.status(200).json({ message: 'Admin verified. Please enter secret code.', role: 'admin' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = otp;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+    await user.save();
+
+    await otpService.sendOTP(email, otp);
+    res.status(200).json({ message: 'OTP sent to your email', role: 'customer' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, otp, secretCode, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.role === 'admin') {
+      if (secretCode !== process.env.ADMIN_SECRET_CODE) {
+        return res.status(400).json({ message: 'Invalid secret code' });
+      }
+    } else {
+      if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || user.resetPasswordExpires < Date.now()) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' });
+      }
+    }
+
+    user.password = newPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -92,8 +142,40 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Lockout check for admins (5 times limit)
+    if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(403).json({ message: 'Too many attempts. Please try after sometime' });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    
+    if (!isMatch) {
+      if (user.role === 'admin') {
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        if (user.loginAttempts >= 5) {
+          user.lockUntil = Date.now() + 30 * 60 * 1000; // 30 mins lock
+          await user.save();
+          
+          // Send notification email
+          try {
+            await otpService.sendLockoutEmail(user.email);
+          } catch (mailErr) {
+            console.error('Failed to send lockout email', mailErr);
+          }
+
+          return res.status(403).json({ message: 'Too many attempts. Please try after sometime' });
+        }
+        await user.save();
+      }
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Reset attempts on successful login
+    if (user.role === 'admin') {
+      user.loginAttempts = 0;
+      user.lockUntil = undefined;
+      await user.save();
+    }
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);

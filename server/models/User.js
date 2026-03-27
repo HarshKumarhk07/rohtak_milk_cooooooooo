@@ -9,6 +9,10 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   role: { type: String, enum: ['customer', 'admin', 'delivery'], default: 'customer' },
   isVerified: { type: Boolean, default: false },
+  resetPasswordOTP: { type: String },
+  resetPasswordExpires: { type: Date },
+  loginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date },
 
   wishlist: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },

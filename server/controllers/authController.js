@@ -112,7 +112,7 @@ exports.resetPassword = async (req, res) => {
 
     // Lockout check for admins (5 times OTP limit)
     if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
+      return res.status(403).json({ message: 'Too many attempts. Please try after 10 minutes' });
     }
 
     if (user.role === 'admin') {
@@ -123,14 +123,14 @@ exports.resetPassword = async (req, res) => {
       if (!isOtpValid || !isSecretValid) {
         user.otpAttempts = (user.otpAttempts || 0) + 1;
         if (user.otpAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
+          user.lockUntil = Date.now() + 10 * 60 * 1000; // 10 mins lock
           await user.save();
           try {
             await otpService.sendLockoutEmail(user.email);
           } catch (mailErr) {
             console.error('Failed to send lockout email', mailErr);
           }
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+          return res.status(403).json({ message: 'Too many attempts. Locked for 10 minutes' });
         }
         await user.save();
         return res.status(400).json({ message: 'Invalid OTP or Secret Code' });
@@ -165,7 +165,7 @@ exports.login = async (req, res) => {
 
     // Lockout check for admins (5 times limit)
     if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
+      return res.status(403).json({ message: 'Too many attempts. Please try after 10 minutes' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -174,7 +174,7 @@ exports.login = async (req, res) => {
       if (user.role === 'admin') {
         user.loginAttempts = (user.loginAttempts || 0) + 1;
         if (user.loginAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
+          user.lockUntil = Date.now() + 10 * 60 * 1000; // 10 mins lock
           await user.save();
           
           // Send notification email
@@ -184,7 +184,7 @@ exports.login = async (req, res) => {
             console.error('Failed to send lockout email', mailErr);
           }
 
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+          return res.status(403).json({ message: 'Too many attempts. Locked for 10 minutes' });
         }
         await user.save();
       }
@@ -204,10 +204,10 @@ exports.login = async (req, res) => {
       if (secretCode !== process.env.ADMIN_SECRET_CODE) {
         user.loginAttempts = (user.loginAttempts || 0) + 1;
         if (user.loginAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
+          user.lockUntil = Date.now() + 10 * 60 * 1000; // 10 mins lock
           await user.save();
           try { await otpService.sendLockoutEmail(user.email); } catch (e) {}
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+          return res.status(403).json({ message: 'Too many attempts. Locked for 10 minutes' });
         }
         await user.save();
         return res.status(400).json({ message: 'Invalid Admin Secret Code' });

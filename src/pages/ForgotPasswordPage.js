@@ -7,9 +7,9 @@ const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [secretCode, setSecretCode] = useState('');
+    const [role, setRole] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [step, setStep] = useState(1); // 1: Email, 2: OTP/Secret, 3: Success
-    const [role, setRole] = useState('');
     const [message, setMessage] = useState('');
     const [isError, setIsError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ const ForgotPasswordPage = () => {
         try {
             await apiClient.post('/auth/reset-password', {
                 email,
-                otp: role === 'customer' ? otp : undefined,
+                otp,
                 secretCode: role === 'admin' ? secretCode : undefined,
                 newPassword
             });
@@ -101,7 +101,16 @@ const ForgotPasswordPage = () => {
 
                         {step === 2 && (
                             <form onSubmit={handleResetPassword}>
-                                {role === 'admin' ? (
+                                <div className="input-box">
+                                    <input
+                                        type="text"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        required
+                                    />
+                                    <label>{role === 'admin' ? 'Email OTP' : 'OTP Code'}</label>
+                                </div>
+                                {role === 'admin' && (
                                     <div className="input-box">
                                         <input
                                             type="text"
@@ -109,17 +118,7 @@ const ForgotPasswordPage = () => {
                                             onChange={(e) => setSecretCode(e.target.value)}
                                             required
                                         />
-                                        <label>Admin Secret Code</label>
-                                    </div>
-                                ) : (
-                                    <div className="input-box">
-                                        <input
-                                            type="text"
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value)}
-                                            required
-                                        />
-                                        <label>OTP Code</label>
+                                        <label>Secret Code</label>
                                     </div>
                                 )}
                                 <div className="input-box">

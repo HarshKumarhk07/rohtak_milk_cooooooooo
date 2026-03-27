@@ -11,6 +11,9 @@ const LoginRegisterPage = () => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [needsSecretCode, setNeedsSecretCode] = useState(false);
+  const [loginSecretCode, setLoginSecretCode] = useState("");
+  const [loginMessage, setLoginMessage] = useState("");
 
   // Signup state
   const [name, setName] = useState("");
@@ -36,11 +39,21 @@ const LoginRegisterPage = () => {
     setIsLoginSubmitting(true);
     setLoginError("");
     try {
-      const { data } = await apiClient.post("/auth/login", {
+      const response = await apiClient.post("/auth/login", {
         email: loginEmail,
         password: loginPassword,
+        secretCode: needsSecretCode ? loginSecretCode : undefined,
       });
-      await login(data);
+
+      if (response.status === 202 && response.data.needsSecretCode) {
+        setNeedsSecretCode(true);
+        setLoginMessage(response.data.message);
+        // Clear the message after 2 seconds so it disappears
+        setTimeout(() => setLoginMessage(""), 2000);
+        return;
+      }
+
+      await login(response.data);
       navigate("/");
     } catch (err) {
       setLoginError(err.response?.data?.message || "Login failed");
@@ -118,13 +131,54 @@ const LoginRegisterPage = () => {
           <div className="animation">
             <h2>Login</h2>
             <form onSubmit={(e) => e.preventDefault()}>
-              {loginError && <p className="error-text">{loginError}</p>}
+              {loginMessage && (
+                <div style={{
+                  position: 'fixed',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: '#ffd43b',
+                  color: '#136b56',
+                  padding: '16px 24px',
+                  borderRadius: '12px',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+                  zIndex: 10000,
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  textAlign: 'center',
+                  width: 'min(90%, 350px)',
+                  border: '3px solid #136b56',
+                  animation: 'popInCentered 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}>
+                  <span 
+                    onClick={() => setLoginMessage("")}
+                    style={{
+                      position: 'absolute',
+                      top: '5px',
+                      right: '10px',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    ×
+                  </span>
+                  {loginMessage}
+                </div>
+              )}
+              {loginError && (
+                <p className="error-text" style={{ marginBottom: "10px" }}>
+                  {loginError}
+                </p>
+              )}
               <div className="input-box">
                 <input
                   type="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   required
+                  disabled={needsSecretCode}
+                  placeholder=" "
                 />
                 <label>Email</label>
               </div>
@@ -134,22 +188,44 @@ const LoginRegisterPage = () => {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   required
+                  disabled={needsSecretCode}
+                  placeholder=" "
                 />
                 <label>Password</label>
               </div>
-              <div className="input-box">
-                <button type="button" onClick={handleLogin} className="btn" disabled={isLoginSubmitting}>
-                  Login
+
+              {needsSecretCode && (
+                <div className="input-box" style={{ marginTop: "35px" }}>
+                  <input
+                    type="text"
+                    value={loginSecretCode}
+                    onChange={(e) => setLoginSecretCode(e.target.value)}
+                    required
+                    autoFocus
+                    placeholder=" "
+                  />
+                  <label>Admin Secret Code</label>
+                </div>
+              )}
+
+              <div className="input-box" style={{ marginTop: "30px" }}>
+                <button 
+                  type="button" 
+                  onClick={handleLogin} 
+                  className="btn" 
+                  disabled={isLoginSubmitting}
+                >
+                  {isLoginSubmitting ? "Processing..." : needsSecretCode ? "Verify & Login" : "Login"}
                 </button>
               </div>
-              <div className="forgot-pass" style={{ textAlign: "right", marginTop: "-10px", marginBottom: "15px" }}>
+              <div className="forgot-pass" style={{ textAlign: "right", marginTop: "15px", marginBottom: "15px" }}>
                 <Link to="/forgot-password" style={{ color: "white", fontSize: "14px", textDecoration: "none" }}>Forgot Password?</Link>
               </div>
 
-              {isLoginSubmitting && (
+              {isLoginSubmitting && !needsSecretCode && (
                 <div className="flex items-center justify-center gap-2 mt-4 text-white">
                   <div className="spinner"></div>
-                  <span className="text-sm font-medium">Logging in...</span>
+                  <span className="text-sm font-medium">Verifying...</span>
                 </div>
               )}
               <div className="regi-link">
@@ -189,6 +265,7 @@ const LoginRegisterPage = () => {
                   onChange={(e) => setSignupEmail(e.target.value)}
                   required
                   disabled={isOtpSent}
+                  placeholder=" "
                 />
                 <label>Email</label>
               </div>
@@ -200,6 +277,7 @@ const LoginRegisterPage = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      placeholder=" "
                     />
                     <label>Full Name</label>
                   </div>
@@ -209,6 +287,7 @@ const LoginRegisterPage = () => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
+                      placeholder=" "
                     />
                     <label>Phone</label>
                   </div>
@@ -218,6 +297,7 @@ const LoginRegisterPage = () => {
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
+                      placeholder=" "
                     />
                     <label>Password</label>
                   </div>
@@ -227,14 +307,17 @@ const LoginRegisterPage = () => {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       required
+                      placeholder=" "
                     />
                     <label>OTP</label>
                   </div>
                 </>
               )}
-              <button type="submit" className="btn" disabled={isSignupSubmitting}>
-                {isOtpSent ? "Verify & Register" : "Request OTP"}
-              </button>
+              <div className="input-box" style={{ marginTop: "30px" }}>
+                <button type="submit" className="btn" disabled={isSignupSubmitting}>
+                  {isOtpSent ? "Verify & Register" : "Request OTP"}
+                </button>
+              </div>
 
               {isSignupSubmitting && (
                 <div className="flex items-center justify-center gap-2 mt-4 text-white">

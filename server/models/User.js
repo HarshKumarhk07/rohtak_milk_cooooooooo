@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordOTP: { type: String },
   resetPasswordExpires: { type: Date },
   loginAttempts: { type: Number, default: 0 },
+  otpAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date },
 
   wishlist: [{

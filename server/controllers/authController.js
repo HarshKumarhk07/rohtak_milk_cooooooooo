@@ -92,17 +92,13 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (user.role === 'admin') {
-      return res.status(200).json({ message: 'Admin verified. Please enter secret code.', role: 'admin' });
-    }
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetPasswordOTP = otp;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
     await user.save();
 
     await otpService.sendOTP(email, otp);
-    res.status(200).json({ message: 'OTP sent to your email', role: 'customer' });
+    res.status(200).json({ message: 'OTP sent to your email', role: user.role });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -114,11 +110,36 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Lockout check for admins (5 times OTP limit)
+    if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
+    }
+
     if (user.role === 'admin') {
-      if (secretCode !== process.env.ADMIN_SECRET_CODE) {
-        return res.status(400).json({ message: 'Invalid secret code' });
+      // Admin must provide BOTH otp and secretCode
+      const isOtpValid = user.resetPasswordOTP && user.resetPasswordOTP === otp && user.resetPasswordExpires > Date.now();
+      const isSecretValid = secretCode && secretCode === process.env.ADMIN_SECRET_CODE;
+
+      if (!isOtpValid || !isSecretValid) {
+        user.otpAttempts = (user.otpAttempts || 0) + 1;
+        if (user.otpAttempts >= 5) {
+          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
+          await user.save();
+          try {
+            await otpService.sendLockoutEmail(user.email);
+          } catch (mailErr) {
+            console.error('Failed to send lockout email', mailErr);
+          }
+          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+        }
+        await user.save();
+        return res.status(400).json({ message: 'Invalid OTP or Secret Code' });
       }
+      
+      // Reset attempts on success
+      user.otpAttempts = 0;
     } else {
+      // Standard customer check
       if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || user.resetPasswordExpires < Date.now()) {
         return res.status(400).json({ message: 'Invalid or expired OTP' });
       }
@@ -136,7 +157,7 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, secretCode } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -144,7 +165,7 @@ exports.login = async (req, res) => {
 
     // Lockout check for admins (5 times limit)
     if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: 'Too many attempts. Please try after sometime' });
+      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -153,7 +174,7 @@ exports.login = async (req, res) => {
       if (user.role === 'admin') {
         user.loginAttempts = (user.loginAttempts || 0) + 1;
         if (user.loginAttempts >= 5) {
-          user.lockUntil = Date.now() + 30 * 60 * 1000; // 30 mins lock
+          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
           await user.save();
           
           // Send notification email
@@ -163,16 +184,40 @@ exports.login = async (req, res) => {
             console.error('Failed to send lockout email', mailErr);
           }
 
-          return res.status(403).json({ message: 'Too many attempts. Please try after sometime' });
+          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
         }
         await user.save();
       }
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Admin secret code check - Step 2
+    if (user.role === 'admin') {
+      if (!secretCode) {
+        // Return a special status code indicating that we need the secret code
+        return res.status(202).json({ 
+          message: 'Password correct. Please enter Admin Secret Code to continue.', 
+          needsSecretCode: true 
+        });
+      }
+
+      if (secretCode !== process.env.ADMIN_SECRET_CODE) {
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        if (user.loginAttempts >= 5) {
+          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
+          await user.save();
+          try { await otpService.sendLockoutEmail(user.email); } catch (e) {}
+          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+        }
+        await user.save();
+        return res.status(400).json({ message: 'Invalid Admin Secret Code' });
+      }
+    }
+
     // Reset attempts on successful login
     if (user.role === 'admin') {
       user.loginAttempts = 0;
+      user.otpAttempts = 0;
       user.lockUntil = undefined;
       await user.save();
     }

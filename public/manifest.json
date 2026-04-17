@@ -3,9 +3,9 @@
   "name": "Gaon Se Ghar Tak - Fresh & Pure Farming",
   "icons": [
     {
-      "src": "logo-2.jpeg",
+      "src": "favicon-brand.png",
       "sizes": "192x192 512x512",
-      "type": "image/jpeg"
+      "type": "image/png"
     }
   ],
   "start_url": ".",

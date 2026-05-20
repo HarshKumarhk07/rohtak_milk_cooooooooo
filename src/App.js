@@ -42,6 +42,7 @@ import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ComingSoonPopup from "./components/ComingSoonPopup";
 
 // Define the ScrollToTop component
 const ScrollToTop = () => {
@@ -97,6 +98,7 @@ function AppLayout() {
 function App() {
   return (
     <Router>
+      <ComingSoonPopup />
       <AppLayout />
     </Router>
   );

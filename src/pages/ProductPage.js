@@ -653,6 +653,7 @@ const ProductPage = () => {
           </div>
 
           {/* Action Button */}
+          {/* --- Add to Cart button disabled for "Coming Soon" launch (code kept, only commented out) ---
           <div className="mt-8">
             {product.isComingSoon ? (
               <button
@@ -680,6 +681,7 @@ const ProductPage = () => {
               </button>
             )}
           </div>
+          --- */}
         </div>
       </div>
 

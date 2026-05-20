@@ -494,6 +494,7 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* ADD Button or Counter */}
+          {/* --- ADD button disabled for "Coming Soon" launch (code kept, only commented out) ---
           <div className="relative z-20 flex justify-end">
             {isComingSoon ? (
               null
@@ -529,6 +530,7 @@ const ProductCard = ({ product }) => {
               </div>
             )}
           </div>
+          --- */}
         </div>
       </div>
     </div>

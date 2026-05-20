@@ -262,6 +262,11 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Coming Soon static banner */}
+      <div className="bg-yellow-400 text-gray-900 py-1.5 px-2 text-center text-[10px] md:text-sm font-bold tracking-widest uppercase">
+        Coming Soon at your doorstep
+      </div>
+
       <div className="mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 py-4">
         {/* Logo */}
         <Link
@@ -269,7 +274,7 @@ const Header = () => {
           className="flex items-center transition-all duration-300"
           aria-label="Gaon Se Ghar Tak Home"
         >
-          <img src="/logo-2.jpeg" alt="Gaon Se Ghar Tak" className="h-[42px] w-[150px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
+          <img src="/logo-2.jpeg" alt="Gaon Se Ghar Tak" className="h-[32px] w-[115px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
         </Link>
 
         {/* Desktop Nav */}

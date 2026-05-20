@@ -263,7 +263,7 @@ const Header = () => {
       </div>
 
       {/* Coming Soon static banner */}
-      <div className="bg-yellow-400 text-gray-900 py-1.5 px-2 text-center text-[10px] md:text-sm font-bold tracking-widest uppercase">
+      <div className="bg-yellow-400 text-gray-900 py-0.5 px-2 text-center text-[8px] md:text-[10px] font-bold tracking-widest uppercase leading-tight">
         Coming Soon at your doorstep
       </div>
 

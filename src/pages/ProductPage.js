@@ -183,6 +183,7 @@ const ProductPage = () => {
 
   const handleAddToCart = (buyNow = false) => {
     if (!isAuthenticated) {
+      alert("Please log in to buy products.");
       navigate("/login");
       return;
     }

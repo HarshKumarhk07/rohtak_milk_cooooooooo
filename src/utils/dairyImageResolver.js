@@ -77,14 +77,26 @@ function isDairyImageUrl(url) {
   return approved && !blocked;
 }
 
+// Images uploaded by an admin (via Cloudinary) are always trusted and shown
+// as-is, even though their URLs don't contain dairy keywords.
+function isUploadedImageUrl(url) {
+  const normalized = normalizeText(url);
+  return normalized.includes('res.cloudinary.com') || normalized.includes('/image/upload/');
+}
+
+// A URL we should display directly rather than replace with a stock fallback.
+function isTrustedImageUrl(url) {
+  return isUploadedImageUrl(url) || isDairyImageUrl(url) || normalizeText(url).startsWith('/assets/dairy/');
+}
+
 function resolveDairyUrl(url, fallback = dairyAssets.genericSection) {
   if (!url) return fallback;
-  return isDairyImageUrl(url) || normalizeText(url).startsWith('/assets/dairy/') ? url : fallback;
+  return isTrustedImageUrl(url) ? url : fallback;
 }
 
 function resolveProductImage(product, index = 0) {
   const candidate = product?.images?.[index];
-  if (isDairyImageUrl(candidate) || normalizeText(candidate).startsWith('/assets/dairy/')) {
+  if (candidate && isTrustedImageUrl(candidate)) {
     return candidate;
   }
 
@@ -107,6 +119,11 @@ function resolveProductImage(product, index = 0) {
 }
 
 function resolveCategoryImage(category) {
+  // Prefer an admin-uploaded image when present.
+  if (category && typeof category === 'object' && isTrustedImageUrl(category.image)) {
+    return category.image;
+  }
+
   const categoryName = normalizeText(category?.name || category?.categoryName || category);
 
   if (categoryName.includes('milk') || categoryName.includes('dairy')) return dairyAssets.productCowMilk;

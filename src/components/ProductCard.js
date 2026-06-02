@@ -260,6 +260,7 @@ const ProductCard = ({ product }) => {
   const handleAdd = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
+      alert("Please log in to buy products.");
       navigate("/login");
       return;
     }
@@ -270,6 +271,7 @@ const ProductCard = ({ product }) => {
   const handleIncrement = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
+      alert("Please log in to buy products.");
       navigate("/login");
       return;
     }
@@ -285,6 +287,7 @@ const ProductCard = ({ product }) => {
   const handleDecrement = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
+      alert("Please log in to buy products.");
       navigate("/login");
       return;
     }

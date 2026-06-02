@@ -1,4 +1,5 @@
 // src/controllers/productController.js
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
 const { Readable } = require('stream');
@@ -183,7 +184,10 @@ exports.updateProduct = async (req, res) => {
     product.name = name || product.name;
     product.description = description || product.description;
     product.brand = brand || product.brand;
-    product.category = category || product.category;
+    // Only overwrite category with a valid ObjectId; ignore empty/"undefined"/name values
+    if (category && mongoose.isValidObjectId(category)) {
+      product.category = category;
+    }
     product.gender = gender || product.gender;
     product.subCategory = subCategory || product.subCategory;
     product.images = fileUrls;
@@ -205,7 +209,7 @@ exports.updateProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Backend Error during product update:', error);
-    res.status(500).json({ message: 'Failed to update product', error });
+    res.status(500).json({ message: 'Failed to update product', error: error.message });
   }
 };
 

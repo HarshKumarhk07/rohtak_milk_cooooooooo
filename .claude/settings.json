@@ -39,7 +39,10 @@
       "Bash(node scripts/seedDairyProducts.js)",
       "Bash(git check-ignore *)",
       "Bash(echo \"exit=$?\")",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(grep -vE \"injected env|nodemon|^>|^$|user connected|user disconnected|Warning: use|trace-warnings\")",
+      "Bash(node -e ' *)",
+      "Bash(node --check src/utils/dairyImageResolver.js)"
     ]
   }
 }

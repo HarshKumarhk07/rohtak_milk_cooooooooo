@@ -72,6 +72,32 @@ exports.getCategoryById = async (req, res) => {
     }
 };
 
+// @desc    Update a category (name and/or image)
+// @route   PUT /api/categories/:id
+// @access  Private/Admin
+exports.updateCategory = async (req, res) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+        if (req.body.name) category.name = req.body.name;
+
+        // Replace the image only if a new file was uploaded.
+        if (req.file) {
+            const result = await bufferUpload(req.file.buffer, process.env.CLOUDINARY_FOLDER);
+            category.image = result.secure_url;
+        }
+
+        const updated = await category.save();
+        res.json(updated);
+    } catch (error) {
+        console.error('Category update failed:', error);
+        res.status(500).json({ message: 'Category update failed', error: error.message });
+    }
+};
+
 // @desc    Delete a category by ID
 // @route   DELETE /api/categories/:id
 // @access  Private/Admin

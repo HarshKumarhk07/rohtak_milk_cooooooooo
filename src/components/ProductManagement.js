@@ -29,6 +29,11 @@ const ProductManagement = () => {
   const [newCategoryImage, setNewCategoryImage] = useState(null);
   const [newCategoryImagePreview, setNewCategoryImagePreview] = useState(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  // Edit-category state
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategoryImage, setEditCategoryImage] = useState(null);
+  const [editCategoryImagePreview, setEditCategoryImagePreview] = useState(null);
   const [variants, setVariants] = useState([{ size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
   const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   const [pincodeLocationMap, setPincodeLocationMap] = useState({});
@@ -131,6 +136,45 @@ const ProductManagement = () => {
       setCategories(response.data);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const handleEditCategoryClick = (cat) => {
+    setEditingCategoryId(cat._id);
+    setEditCategoryName(cat.name);
+    setEditCategoryImage(null);
+    setEditCategoryImagePreview(cat.image || null);
+  };
+
+  const handleCancelEditCategory = () => {
+    setEditingCategoryId(null);
+    setEditCategoryName('');
+    setEditCategoryImage(null);
+    setEditCategoryImagePreview(null);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingCategoryId) return;
+    if (!editCategoryName.trim()) {
+      alert('Category name is required.');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const data = new FormData();
+      data.append('name', editCategoryName);
+      if (editCategoryImage) data.append('image', editCategoryImage);
+
+      const res = await apiClient.put(`/categories/${editingCategoryId}`, data, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      });
+
+      setCategories(categories.map(c => (c._id === editingCategoryId ? res.data : c)));
+      alert('Category updated!');
+      handleCancelEditCategory();
+    } catch (err) {
+      console.error('Failed to update category:', err);
+      alert(err.response?.data?.message || 'Failed to update category.');
     }
   };
 
@@ -587,13 +631,59 @@ const ProductManagement = () => {
           </div>
         )}
 
+        {/* Edit existing category */}
+        {editingCategoryId && (
+          <div className="p-4 border rounded-md bg-blue-50 mt-2">
+            <h3 className="text-lg font-semibold mb-2">Edit Category</h3>
+            <input
+              type="text"
+              placeholder="Category Name"
+              value={editCategoryName}
+              onChange={(e) => setEditCategoryName(e.target.value)}
+              className="w-full p-2 border rounded-md mb-2"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setEditCategoryImage(file);
+                  setEditCategoryImagePreview(URL.createObjectURL(file));
+                }
+              }}
+              className="w-full p-2 border rounded-md mb-2"
+            />
+            {editCategoryImagePreview && (
+              <img src={editCategoryImagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-md mb-2" />
+            )}
+            <p className="text-[11px] text-gray-500 mb-2">Leave the image empty to keep the current one.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={handleUpdateCategory} className="bg-blue-600 text-white px-4 py-2 rounded-md">
+                Update Category
+              </button>
+              <button type="button" onClick={handleCancelEditCategory} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Manage Existing Categories */}
         <div className="mt-4 p-4 border rounded-md bg-gray-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Existing Categories (Click &times; to delete)</h3>
+          <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Existing Categories (Click pencil to edit, &times; to delete)</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map(cat => (
               <div key={cat._id} className="flex items-center bg-white border border-gray-300 rounded-full pl-3 pr-1 py-1 shadow-sm hover:border-red-300 transition-all group">
                 <span className="text-xs font-bold text-gray-700 mr-2">{cat.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleEditCategoryClick(cat)}
+                  className="bg-gray-100 text-gray-400 hover:bg-blue-500 hover:text-white rounded-full p-1 transition-all mr-1"
+                  title={`Edit ${cat.name}`}
+                >
+                  <FaEdit size={11} />
+                </button>
                 <button
                   type="button"
                   onClick={() => handleDeleteCategory(cat._id)}

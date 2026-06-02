@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 import apiClient from "../services/apiClient";
-import { dairyAssets, resolveCategoryImage } from "../utils/dairyImageResolver";
+import { dairyAssets, resolveCategoryImage, resolveProductImage } from "../utils/dairyImageResolver";
 
 const dairyData = [
   {
@@ -41,22 +41,41 @@ const dairyData = [
 const HeroSection = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/categories');
-        setCategories(response.data);
+        const [catRes, prodRes] = await Promise.all([
+          apiClient.get('/categories'),
+          apiClient.get('/products'),
+        ]);
+        setCategories(catRes.data);
+        setProducts(Array.isArray(prodRes.data) ? prodRes.data : []);
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
+        console.error('Failed to fetch hero data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
+
+  // Trending strip is built from real products so the admin-uploaded image
+  // shows here too. Falls back to the static list only if no products exist.
+  const trendingItems = products.length > 0
+    ? products.slice(0, 12).map((p) => {
+        const variant = p.variants?.[0] || {};
+        return {
+          id: p._id,
+          productName: p.name,
+          productPrice: variant.price ? `₹${variant.price}` : '',
+          productImage: resolveProductImage(p, 0),
+        };
+      })
+    : dairyData;
 
   return (
     <div className="relative flex flex-col bg-white overflow-hidden pt-0 pb-10 md:pb-20">
@@ -149,8 +168,8 @@ const HeroSection = () => {
         </div>
 
         <div className="flex space-x-3 md:space-x-6 text-sm text-white overflow-x-auto no-scrollbar items-center">
-          {dairyData.map((item, idx) => (
-            <div key={idx} className="flex items-center space-x-2 min-w-[120px] md:min-w-[160px] bg-white/5 border border-white/5 rounded-lg px-2 py-1 shadow-inner hover:bg-white/15 transition-all cursor-pointer group/item" onClick={() => navigate('/products')}>
+          {trendingItems.map((item, idx) => (
+            <div key={item.id || idx} className="flex items-center space-x-2 min-w-[120px] md:min-w-[160px] bg-white/5 border border-white/5 rounded-lg px-2 py-1 shadow-inner hover:bg-white/15 transition-all cursor-pointer group/item" onClick={() => navigate(item.id ? `/product/${item.id}` : '/products')}>
               <img src={item.productImage} alt={item.productName} className="w-[28px] h-[28px] md:w-[40px] md:h-[40px] object-cover rounded-md flex-shrink-0 group-hover/item:scale-110 transition-transform" />
               <div className="overflow-hidden">
                 <p className="font-bold truncate text-[9px] md:text-[12px] group-hover/item:text-yellow-300" title={item.productName}>{item.productName}</p>

@@ -540,14 +540,6 @@ const MyOrdersPage = () => {
             ) : (
                 <div className="space-y-8">
                     {orders.map((order) => {
-                        const request = allRequests.find(
-                            (req) => String(req.order?._id || req.order) === String(order._id)
-                        );
-
-                        const isPendingOrInProgress = request?.status === 'pending' || request?.status === 'out for pickup';
-                        const isRejected = request?.status === 'rejected';
-                        const isCompleted = request?.status === 'received' || request?.status === 'completed';
-
                         return (
                             <div key={order._id} className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-4 mb-4">

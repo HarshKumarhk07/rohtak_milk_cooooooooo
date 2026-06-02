@@ -91,7 +91,8 @@ const allowedOrigins = [
   "https://rohtakmilkcompany.in",
   "https://www.rohtakmilkcompany.in",
   "http://rohtakmilkcompany.in",
-  "http://www.rohtakmilkcompany.in"
+  "http://www.rohtakmilkcompany.in",
+  "https://rohtak-milk-cooooooooo.vercel.app"
 ];
 
 app.use(cors({

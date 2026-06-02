@@ -319,53 +319,50 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-
-// Using public asset paths
-const vi = "/assets/vi.mp4";
-const vi2 = "/assets/vi2.mp4";
+import { dairyAssets } from "../utils/dairyImageResolver";
 
 const sections = [
   {
     id: "b1",
-    img: "/assets/organic_farm_harvest.png",
-    title: "Organic Farm Harvest",
-    text: "Experience the bounty of nature with our hand-picked organic vegetables. Sourced daily from local sustainable farms, bringing the crispest flavors directly to your kitchen.",
+    img: dairyAssets.heroMilk,
+    title: "Dairy Farm Harvest",
+    text: "See how we collect fresh cow and buffalo milk every morning from our trusted local farms, ensuring purity and quality in every bottle.",
   },
   {
     id: "b2",
-    img: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=1200&q=80",
-    title: "Vibrant Tropical Fruits",
-    text: "Taste the sunshine with our premium selection of exotic and local fruits. Rich in antioxidants and natural sweetness, perfectly ripened and ready to nourish your body.",
+    img: dairyAssets.productCowMilk,
+    title: "Milk Varieties",
+    text: "Choose from full cream, toned, double-toned, cow milk and buffalo milk — tailored to your family's taste and nutrition needs.",
   },
   {
     id: "b3",
-    img: "https://images.unsplash.com/photo-1528750997573-59b89d56f4f7?auto=format&fit=crop&w=1200&q=80",
+    img: dairyAssets.productCurd,
     title: "Pure Dairy Essentials",
-    text: "Wholesome and pure, our dairy products are processed with utmost care. From farm-fresh milk to artisanal cheeses, we ensure every drop is packed with nutrition and safety.",
+    text: "From fresh curd and paneer to pure ghee, our dairy essentials are crafted and packed with hygiene and care for your table.",
   },
   {
     id: "b4",
-    img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
-    title: "Artisanal Bakery",
-    text: "Our master bakers bring you the warmth of freshly baked artisanal breads and pastries. Using ancient grains and traditional methods for a taste that's truly timeless.",
+    img: dairyAssets.productPaneer,
+    title: "Dairy Combo Packs",
+    text: "Convenient combo packs with milk, curd, and paneer — perfect for households and subscription deliveries.",
   },
   {
     id: "b5",
-    img: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=1200&q=80",
-    title: "Gourmet Snacks",
-    text: "Elevate your snacking experience with our curated collection of gourmet treats. Perfect balances of flavor and crunch, crafted for the conscious snacker.",
+    img: dairyAssets.testimonialDelivery,
+    title: "Subscription Plans",
+    text: "Daily, alternate-day, and weekly subscription plans — flexible delivery slots and pause/resume options for your convenience.",
   },
   {
     id: "b6",
-    img: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80",
-    title: "Fresh Herb Garden",
-    text: "Bring your dishes to life with our fragrant, pesticide-free herbs. Grown with care to retain their essential oils and vibrant green freshness.",
+    img: dairyAssets.visitCenter,
+    title: "Hygiene & Safety",
+    text: "We follow strict hygiene, temperature control and sealed packaging to deliver dairy products that are safe and nutritious.",
   },
   {
     id: "b7",
-    img: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80",
+    img: dairyAssets.testimonialFamily,
     title: "The Pursuit of Health",
-    text: "From farm to fork, Gaon se ghar tak is dedicated to your well-being. We believe that eating well is the first step to living a better, more vibrant life.",
+    text: "From farm to door, Rohtak Milk Company is committed to nourishing your family with the best dairy produce.",
   },
 ];
 
@@ -381,11 +378,7 @@ const PremiumShowcase = () => {
       >
         {/* Background Image Overlay */}
         <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1920&q=80"
-            alt="Grocery Background"
-            className="w-full h-full object-cover"
-          />
+          <img src={dairyAssets.heroMilk} alt="Fresh milk pouring into a glass" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
 
@@ -396,7 +389,7 @@ const PremiumShowcase = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          Gaon Se Ghar Tak
+          Rohtak Milk Company
         </motion.h1>
         <motion.p
           className="text-base sm:text-lg md:text-2xl font-light max-w-3xl mx-auto italic text-white relative z-10"

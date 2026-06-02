@@ -95,7 +95,6 @@
 // export default AllRecentProductsPage;
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import apiClient from "../services/apiClient";
 import ProductCard from "../components/ProductCard";
 import LoadingSpinner from "../components/LoadingSpinner";

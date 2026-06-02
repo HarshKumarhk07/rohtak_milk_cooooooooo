@@ -194,12 +194,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import apiClient from "../services/apiClient";
 import { Link, useNavigate } from "react-router-dom";
-import { BsArrowRight } from "react-icons/bs";
 import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { AiOutlineEye } from "react-icons/ai";
+import { isDairyImageUrl, resolveProductImage } from "../utils/dairyImageResolver";
 
 const ProductCard = ({ product }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -210,7 +209,7 @@ const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const intervalRef = useRef(null);
 
-  const { user, wishlist, fetchWishlist, loading: authLoading } = useAuth();
+  const { user, wishlist, fetchWishlist } = useAuth();
   const { cartItems, addToCart, removeFromCart, updateCartQuantity } = useCart();
   const navigate = useNavigate();
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
@@ -299,13 +298,14 @@ const ProductCard = ({ product }) => {
 
   const globalIsWishlisted = user && wishlist.some((item) => item._id === product._id);
   const isWishlisted = localWishlistOverride !== null ? localWishlistOverride : globalIsWishlisted;
+  const cardImages = product?.images?.length > 0 ? product.images : [resolveProductImage(product, 0)];
 
   // Auto image cycle is now based on hover state
   useEffect(() => {
     if (isHovered) {
       intervalRef.current = setInterval(() => {
         setActiveImageIndex(
-          (prevIndex) => (prevIndex + 1) % product.images.length
+          (prevIndex) => (prevIndex + 1) % cardImages.length
         );
       }, 2000);
     } else {
@@ -313,7 +313,7 @@ const ProductCard = ({ product }) => {
       setActiveImageIndex(0); // Reset to the first image when not hovered
     }
     return () => clearInterval(intervalRef.current);
-  }, [product.images, isHovered]);
+  }, [cardImages, isHovered]);
 
   const isVideo = (url) => {
     const videoExtensions = [".mp4", ".mov", ".webm", ".ogg"];
@@ -421,7 +421,7 @@ const ProductCard = ({ product }) => {
                 className={`absolute inset-0 w-full h-full flex items-center justify-center p-1 sm:p-2 transition-opacity duration-700 ${index === activeImageIndex ? "opacity-100" : "opacity-0"
                   } ${isOutOfStock ? "grayscale" : ""}`}
               >
-                {isVideo(url) && isHovered ? (
+                {isVideo(url) && isHovered && isDairyImageUrl(url) ? (
                   <video
                     src={url}
                     autoPlay
@@ -432,7 +432,7 @@ const ProductCard = ({ product }) => {
                   />
                 ) : (
                   <img
-                    src={url}
+                    src={resolveProductImage(product, index)}
                     alt={product.name}
                     className="w-full h-full object-contain mix-blend-multiply"
                     loading="lazy"
@@ -441,13 +441,12 @@ const ProductCard = ({ product }) => {
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center text-gray-300 opacity-60">
-              <span className="text-[7px] font-bold uppercase tracking-[0.2em] mb-1">IMAGE</span>
-              <div className="w-8 h-4 bg-orange-500 rounded-full opacity-40 flex items-center justify-center mb-1">
-                <div className="w-5 h-0.5 bg-white rounded-full skew-x-12"></div>
-              </div>
-              <span className="text-[7px] font-bold uppercase tracking-[0.2em]">UNAVAILABLE</span>
-            </div>
+            <img
+              src={resolveProductImage(product, 0)}
+              alt={product.name}
+              className="w-full h-full object-contain mix-blend-multiply"
+              loading="lazy"
+            />
           )}
         </div>
       </Link>
@@ -494,7 +493,6 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* ADD Button or Counter */}
-          {/* --- ADD button disabled for "Coming Soon" launch (code kept, only commented out) ---
           <div className="relative z-20 flex justify-end">
             {isComingSoon ? (
               null
@@ -530,7 +528,6 @@ const ProductCard = ({ product }) => {
               </div>
             )}
           </div>
-          --- */}
         </div>
       </div>
     </div>

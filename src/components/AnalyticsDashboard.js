@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
+import { Bar, Doughnut, Pie } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -17,8 +17,8 @@ import moment from 'moment';
 import apiClient from '../services/apiClient';
 import {
     FaShoppingCart, FaUsers, FaBox, FaMoneyBillWave,
-    FaCalendarDay, FaChartLine, FaArrowUp, FaArrowDown,
-    FaExclamationTriangle, FaDownload, FaFilter, FaMapMarkerAlt, FaBoxes
+    FaCalendarDay,
+    FaExclamationTriangle, FaDownload, FaMapMarkerAlt
 } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 
@@ -368,16 +368,6 @@ const AnalyticsDashboard = () => {
             borderRadius: 0,
             borderWidth: 0,
             barThickness: 24,
-        }]
-    };
-
-    const categoryData = {
-        labels: filteredCategorySales.map(c => c._id),
-        datasets: [{
-            data: filteredCategorySales.map(c => c.totalSales),
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'],
-            borderWidth: 2,
-            borderColor: '#ffffff'
         }]
     };
 

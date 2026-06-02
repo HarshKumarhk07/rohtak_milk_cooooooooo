@@ -6,7 +6,8 @@ import apiClient from './apiClient';
 
 
 
-const API_URL = '/api/auth';
+// baseURL in apiClient already includes "/api", so paths here start at "/auth".
+const API_URL = '/auth';
 
 const login = async (email, password) => {
   const response = await apiClient.post(`${API_URL}/login`, { email, password });

@@ -358,6 +358,7 @@ import apiClient from '../services/apiClient';
 import moment from 'moment';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { FaBox, FaTruck, FaUndo, FaExchangeAlt, FaTimesCircle, FaCheckCircle, FaSpinner, FaClock } from 'react-icons/fa';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const MyOrdersPage = () => {
     const [orders, setOrders] = useState([]);
@@ -502,35 +503,6 @@ const MyOrdersPage = () => {
         }
     };
 
-    const handleCancelRequest = async (requestId) => {
-        if (window.confirm('Are you sure you want to cancel this request?')) {
-            try {
-                const token = localStorage.getItem('token');
-                await apiClient.post(
-                    '/return-replace/cancel-request',
-                    { requestId },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setRequestMessage('Request cancelled successfully!');
-                fetchMyOrdersAndRequests();
-            } catch (err) {
-                setRequestMessage(err.response?.data?.message || 'Failed to cancel request.');
-            }
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending': return 'bg-yellow-100 text-yellow-800';
-            case 'delivered': return 'bg-green-100 text-green-800';
-            case 'shipped': return 'bg-blue-100 text-blue-800';
-            case 'out for delivery': return 'bg-blue-100 text-blue-800';
-            case 'cancelled': return 'bg-red-100 text-red-800';
-            case 'canceled': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
-
     const getRequestStatusColor = (status) => {
         switch (status) {
             case 'approved': return 'text-green-600';
@@ -575,7 +547,6 @@ const MyOrdersPage = () => {
                         const isPendingOrInProgress = request?.status === 'pending' || request?.status === 'out for pickup';
                         const isRejected = request?.status === 'rejected';
                         const isCompleted = request?.status === 'received' || request?.status === 'completed';
-                        const isActionable = order.isDelivered && !isPendingOrInProgress && !isCompleted && !isRejected;
 
                         return (
                             <div key={order._id} className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-shadow duration-300">
@@ -636,7 +607,7 @@ const MyOrdersPage = () => {
                                             <div key={item._id} className="flex flex-col bg-gray-50 p-4 rounded-md">
                                                 <div className="flex items-center space-x-4">
                                                     <img
-                                                        src={item.product?.images?.[0]}
+                                                        src={resolveProductImage(item.product, 0)}
                                                         alt={item.name}
                                                         className="w-20 h-20 object-cover rounded-lg shadow-sm"
                                                     />

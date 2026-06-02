@@ -1,9 +1,9 @@
 {
-  "short_name": "Gaon Se Ghar",
-  "name": "Gaon Se Ghar Tak - Fresh & Pure Farming",
+  "short_name": "Rohtak Milk",
+  "name": "Rohtak Milk Company - Fresh & Pure Dairy",
   "icons": [
     {
-      "src": "fevicon.png",
+      "src": "logo.png",
       "sizes": "192x192 512x512",
       "type": "image/png"
     }

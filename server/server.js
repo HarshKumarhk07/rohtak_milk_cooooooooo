@@ -102,6 +102,12 @@ io.on('connection', (socket) => {
   });
 });
 
+// Validate MONGODB_URI early to provide a clear error message for misconfiguration
+if (!process.env.MONGODB_URI || (!process.env.MONGODB_URI.startsWith('mongodb://') && !process.env.MONGODB_URI.startsWith('mongodb+srv://'))) {
+  console.error('Missing or invalid MONGODB_URI in .env. Set it to a valid connection string (mongodb://... or mongodb+srv://...).');
+  process.exit(1);
+}
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true

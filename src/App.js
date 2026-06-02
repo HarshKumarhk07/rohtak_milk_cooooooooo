@@ -19,8 +19,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
 import AdminDashboard from './pages/AdminDashboard';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import Header from './components/Header';
@@ -56,8 +54,6 @@ const ScrollToTop = () => {
 };
 
 function AppLayout() {
-  const location = useLocation();
-
   // No longer hiding header on homepage to ensure consistency
 
   return (

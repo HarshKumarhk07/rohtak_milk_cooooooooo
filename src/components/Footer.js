@@ -10,10 +10,10 @@ const Footer = () => {
           {/* Logo and About Section */}
           <div className="space-y-4">
             <Link to="/">
-              <img src="/logo-2.jpeg" alt="Grocery Store Logo" className="w-48 h-auto object-contain bg-white rounded-lg p-2" />
+              <img src="/final_logo_image.png" alt="Rohtak Milk Company Logo" className="w-48 h-auto object-contain bg-white rounded-lg p-2" />
             </Link>
             <p className="text-xs md:text-sm">
-              Your trusted online grocery store. We bring fresh vegetables, fruits, and daily essentials directly from the farm to your kitchen with love and care.
+              Your trusted dairy delivery partner. We bring fresh milk, curd, paneer, and pure ghee directly from local farms to your home with care and quality assurance.
             </p>
             <div className="text-xs md:text-sm pt-2">
               <p>Address: Dk saharan Marodhi JATAN 103, Rohtak, 124021</p>
@@ -55,7 +55,7 @@ const Footer = () => {
               <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
               <li><Link to="/track-order" className="hover:text-white transition-colors">Track Your Order</Link></li>
-              <li><a href="mailto:Gaonseghartak1@gmail.com" className="hover:text-white transition-colors">Farmer Support: Gaonseghartak1@gmail.com</a></li>
+              <li><a href="mailto:rohtakmilkcompany@gmail.com" className="hover:text-white transition-colors">Farmer Support: rohtakmilkcompany@gmail.com</a></li>
             </ul>
           </div>
 
@@ -80,7 +80,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="mt-8 md:mt-12 pt-6 border-t border-gray-700 text-center text-xs md:text-sm">
-        <p>&copy; {new Date().getFullYear()} GAON SE GHAR TAK. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Rohtak Milk Company. All rights reserved.</p>
       </div>
     </footer>
   );

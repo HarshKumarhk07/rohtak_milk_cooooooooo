@@ -7,7 +7,7 @@ const socket = io('http://localhost:5000');
 const LiveLocationTracker = () => {
     const [location, setLocation] = useState({ latitude: null, longitude: null });
     const [status, setStatus] = useState('Waiting for location...');
-    const [user, setUser] = useState(null);
+    const [, setUser] = useState(null);
 
     useEffect(() => {
         const currentUser = JSON.parse(localStorage.getItem('user'));

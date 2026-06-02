@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
 import ProductCard from './ProductCard';
-import LoadingSpinner from './LoadingSpinner';
 
 const FeaturedProductsSection = () => {
     const [products, setProducts] = useState([]);

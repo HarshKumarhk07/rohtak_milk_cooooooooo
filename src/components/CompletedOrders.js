@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import moment from 'moment';
 import apiClient from '../services/apiClient';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const CompletedOrders = ({ refreshFlag }) => {
     const [completedOrders, setCompletedOrders] = useState([]);
@@ -125,7 +126,7 @@ const CompletedOrders = ({ refreshFlag }) => {
                                         {order.orderItems.map((item) => (
                                             <div key={item._id} className="flex items-center gap-3 p-2 bg-white rounded-md border border-gray-100 shadow-sm min-w-[180px]">
                                                 <img
-                                                    src={item.product?.images?.[0]}
+                                                        src={resolveProductImage(item.product, 0)}
                                                     alt={item.name}
                                                     className="w-12 h-12 md:w-16 md:h-16 object-cover rounded"
                                                 />

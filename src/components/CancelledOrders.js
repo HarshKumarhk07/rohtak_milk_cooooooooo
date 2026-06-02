@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 import apiClient from '../services/apiClient';
 import moment from 'moment';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const CancelledOrders = ({ refreshFlag }) => {
     const [cancelledOrders, setCancelledOrders] = useState([]);
@@ -113,15 +114,11 @@ const CancelledOrders = ({ refreshFlag }) => {
                             <div className="w-full lg:w-2/5 flex flex-col md:flex-row lg:flex-col justify-between items-start md:items-center lg:items-end gap-6">
                                 <div className="w-full flex flex-col items-start md:items-end">
                                     <p className="font-semibold text-sm mb-3">Original Product:</p>
-                                    {order.orderItems?.[0]?.product?.images?.[0] ? (
-                                        <img
-                                            src={order.orderItems[0].product.images[0]}
-                                            alt="Original Product"
-                                            className="w-20 h-20 md:w-24 md:h-24 object-cover rounded mt-2 border border-gray-100 shadow-sm"
-                                        />
-                                    ) : (
-                                        <p className="text-gray-400 text-xs italic mt-2">Image not available</p>
-                                    )}
+                                    <img
+                                        src={resolveProductImage(order.orderItems?.[0]?.product, 0)}
+                                        alt="Original Product"
+                                        className="w-20 h-20 md:w-24 md:h-24 object-cover rounded mt-2 border border-gray-100 shadow-sm"
+                                    />
                                 </div>
                                 <button
                                     onClick={() => handleRevertStatus(order._id)}

@@ -101,7 +101,17 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+/* Render the ampersand (&) with a clean sans-serif glyph instead of the
+   decorative Playfair Display serif ampersand. unicode-range limits this
+   font to the "&" character (U+0026) only, so every other letter in
+   headings still uses Playfair Display. */
+@font-face {
+  font-family: 'AmpClean';
+  src: local('Helvetica Neue'), local('Arial'), local('Segoe UI'), local('Roboto');
+  unicode-range: U+0026;
+}
+
 h1,
 h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'AmpClean', 'Playfair Display', serif;
 }

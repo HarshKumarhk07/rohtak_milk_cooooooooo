@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 
 import apiClient from '../services/apiClient';
-import moment from 'moment';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag }) => {
     const [requests, setRequests] = useState([]);
@@ -72,25 +72,6 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
         }
     };
 
-    const handleMoveToUnassigned = async (requestId) => {
-        if (!window.confirm("Are you sure you want to move this request to unassigned deliveries?")) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            await apiClient.post(
-                '/return-replace/admin/update-status',
-                { requestId: requestId, status: 'received' },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            await fetchPendingRequests();
-            if (setRefreshFlag) setRefreshFlag(prev => !prev);
-            setActiveTab('unassignedOrders');
-        } catch (err) {
-            console.error(err);
-            alert('Failed to update status.');
-        }
-    };
-
     const handleRejectRequest = async (requestId) => {
         // Prompt the admin for a rejection reason
         const reason = window.prompt("Please provide a reason for rejecting this request:");
@@ -135,15 +116,11 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                 <p className="text-sm md:text-base"><strong>Type:</strong> <span className="capitalize font-semibold text-blue-600">{request.type}</span></p>
                             </div>
                             <div className="flex items-center space-x-4 my-3 p-3 bg-gray-50 rounded-lg">
-                                {request.originalItem?.product?.images?.[0] ? (
-                                    <img
-                                        src={request.originalItem.product.images[0]}
-                                        alt={request.originalItem.name}
-                                        className="w-16 h-16 object-cover rounded shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400">No Image</div>
-                                )}
+                                <img
+                                    src={resolveProductImage(request.originalItem?.product, 0)}
+                                    alt={request.originalItem.name}
+                                    className="w-16 h-16 object-cover rounded shadow-sm"
+                                />
                                 <div>
                                     <p className="font-bold text-gray-800">{request.originalItem?.name || 'Product Details Not Available'}</p>
                                     <p className="text-sm text-gray-500">Qty: {request.originalItem?.qty} | Pack: {request.originalItem?.size}</p>

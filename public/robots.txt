@@ -9,4 +9,4 @@ Disallow: /cart/
 Disallow: /wishlist/
 Disallow: /search
 
-Sitemap: https://gaonseghartak.in/sitemap.xml
+Sitemap: https://rohtakmilkcompany.in/sitemap.xml

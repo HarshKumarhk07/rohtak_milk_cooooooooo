@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
 import moment from 'moment';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const AssignedPickups = ({ setActiveTab }) => {
     const [pickups, setPickups] = useState([]);
@@ -42,24 +43,6 @@ const AssignedPickups = ({ setActiveTab }) => {
         }
     };
 
-    const handleStatusChange = async (pickupId, newStatus) => {
-        if (!window.confirm(`Are you sure you want to mark this pickup as '${newStatus}'?`)) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            await apiClient.post(
-                '/return-replace/admin/update-status',
-                { requestId: pickupId, status: newStatus },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            alert('Status updated successfully!');
-            fetchAssignedPickups();
-        } catch (err) {
-            console.error(err);
-            alert('Failed to update status.');
-        }
-    };
-
     if (loading) return <div className="text-center mt-10">Loading assigned pickups...</div>;
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
@@ -75,15 +58,11 @@ const AssignedPickups = ({ setActiveTab }) => {
                                 <div>
                                     <p className="text-sm md:text-base"><strong>Order ID:</strong> {pickup.order?.orderNumber}</p>
                                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 my-4 p-3 bg-gray-50 rounded-lg">
-                                        {pickup.originalItem?.product?.images?.[0] ? (
-                                            <img
-                                                src={pickup.originalItem.product.images[0]}
-                                                alt={pickup.originalItem.name}
-                                                className="w-20 h-20 object-cover rounded shadow-sm"
-                                            />
-                                        ) : (
-                                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400">No Image</div>
-                                        )}
+                                        <img
+                                            src={resolveProductImage(pickup.originalItem?.product, 0)}
+                                            alt={pickup.originalItem.name}
+                                            className="w-20 h-20 object-cover rounded shadow-sm"
+                                        />
                                         <div className="space-y-1">
                                             <p className="font-bold text-gray-800">{pickup.originalItem?.name || 'Product Details Not Available'}</p>
                                             <p className="text-sm text-gray-500">Qty: {pickup.originalItem?.qty} | Pack: {pickup.originalItem?.size}</p>

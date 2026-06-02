@@ -1,0 +1,135 @@
+
+> my-project@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src\App.js
+  Line 22:8:  'LoginPage' is defined but never used          no-unused-vars
+  Line 23:8:  'SignupPage' is defined but never used         no-unused-vars
+  Line 59:9:  'location' is assigned a value but never used  no-unused-vars
+
+src\components\AnalyticsDashboard.js
+  Line 2:10:    'Line' is defined but never used                                                                                                    no-unused-vars
+  Line 20:20:   'FaChartLine' is defined but never used                                                                                             no-unused-vars
+  Line 20:33:   'FaArrowUp' is defined but never used                                                                                               no-unused-vars
+  Line 20:44:   'FaArrowDown' is defined but never used                                                                                             no-unused-vars
+  Line 21:40:   'FaFilter' is defined but never used                                                                                                no-unused-vars
+  Line 21:66:   'FaBoxes' is defined but never used                                                                                                 no-unused-vars
+  Line 251:8:   React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                        react-hooks/exhaustive-deps
+  Line 255:8:   React Hook useEffect has missing dependencies: 'fetchSalesTrend' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 259:8:   React Hook useEffect has a missing dependency: 'fetchCategoryData'. Either include it or remove the dependency array                react-hooks/exhaustive-deps
+  Line 263:8:   React Hook useEffect has a missing dependency: 'fetchOrderData'. Either include it or remove the dependency array                   react-hooks/exhaustive-deps
+  Line 267:8:   React Hook useEffect has a missing dependency: 'fetchLocSalesData'. Either include it or remove the dependency array                react-hooks/exhaustive-deps
+  Line 271:8:   React Hook useEffect has a missing dependency: 'fetchLocOrderData'. Either include it or remove the dependency array                react-hooks/exhaustive-deps
+  Line 374:11:  'categoryData' is assigned a value but never used                                                                                   no-unused-vars
+
+src\components\CancelledOrders.js
+  Line 35:8:  React Hook useEffect has a missing dependency: 'fetchCancelledOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CompletedCancelledRequests.js
+  Line 34:8:  React Hook useEffect has a missing dependency: 'fetchRequests'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CompletedOrders.js
+  Line 42:8:  React Hook useEffect has a missing dependency: 'fetchCompletedOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\DeliveredOrdersAnalytics.js
+  Line 37:8:  React Hook useEffect has a missing dependency: 'fetchDeliveredOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\FeaturedProductsSection.js
+  Line 4:8:  'LoadingSpinner' is defined but never used  no-unused-vars
+
+src\components\LiveLocationTracker.js
+  Line 10:12:  'user' is assigned a value but never used  no-unused-vars
+
+src\components\ProductCard.js
+  Line 197:10:  'BsArrowRight' is defined but never used                                                                                                                                                                                                  no-unused-vars
+  Line 202:10:  'AiOutlineEye' is defined but never used                                                                                                                                                                                                  no-unused-vars
+  Line 214:51:  'authLoading' is assigned a value but never used                                                                                                                                                                                          no-unused-vars
+  Line 262:9:   'handleAdd' is assigned a value but never used                                                                                                                                                                                            no-unused-vars
+  Line 272:9:   'handleIncrement' is assigned a value but never used                                                                                                                                                                                      no-unused-vars
+  Line 287:9:   'handleDecrement' is assigned a value but never used                                                                                                                                                                                      no-unused-vars
+  Line 303:9:   The 'cardImages' conditional could make the dependencies of useEffect Hook (at line 318) change on every render. Move it inside the useEffect callback. Alternatively, wrap the initialization of 'cardImages' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+src\components\ProductManagement.js
+  Line 180:9:  'handleVariantChange' is assigned a value but never used  no-unused-vars
+  Line 218:9:  'addVariant' is assigned a value but never used           no-unused-vars
+  Line 219:9:  'removeVariant' is assigned a value but never used        no-unused-vars
+
+src\components\ReturnReplaceRequests.js
+  Line 7:8:    'moment' is defined but never used                           no-unused-vars
+  Line 76:11:  'handleMoveToUnassigned' is assigned a value but never used  no-unused-vars
+
+src\components\TestimonialSlider.js
+  Line 77:6:  React Hook useEffect has a missing dependency: 'handleNext'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\UserManagement.js
+  Line 173:6:  React Hook useEffect has a missing dependency: 'fetchUsers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\AllRecentProductsPage.js
+  Line 98:10:  'motion' is defined but never used  no-unused-vars
+
+src\pages\AppointmentBookingPage.js
+  Line 4:10:  'FaLeaf' is defined but never used            no-unused-vars
+  Line 4:18:  'FaUsers' is defined but never used           no-unused-vars
+  Line 4:27:  'FaClock' is defined but never used           no-unused-vars
+  Line 4:36:  'FaShoppingBasket' is defined but never used  no-unused-vars
+
+src\pages\AssignedPickups.js
+  Line 46:11:  'handleStatusChange' is assigned a value but never used  no-unused-vars
+
+src\pages\CartPage.js
+  Line 83:25:  'data' is assigned a value but never used                                                                       no-unused-vars
+  Line 99:8:   React Hook useEffect has a missing dependency: 'pinPosition'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\ContactPage.js
+  Line 345:11:  <iframe> elements must have a unique title property  jsx-a11y/iframe-has-title
+
+src\pages\DeliveryDashboard.js
+  Line 5:8:   'DeliveredOrdersAnalytics' is defined but never used                                                             no-unused-vars
+  Line 87:4:  React Hook useEffect has a missing dependency: 'fetchAllData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\LoginRegisterPage.js
+  Line 32:10:   'isAdmin' is assigned a value but never used                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  Line 32:19:   'setIsAdmin' is assigned a value but never used                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  Line 33:10:   'secretCode' is assigned a value but never used                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  Line 33:22:   'setSecretCode' is assigned a value but never used                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  Line 301:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  Line 398:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+src\pages\MyOrdersPage.js
+  Line 506:11:  'handleCancelRequest' is assigned a value but never used  no-unused-vars
+  Line 523:11:  'getStatusColor' is assigned a value but never used       no-unused-vars
+  Line 579:31:  'isActionable' is assigned a value but never used         no-unused-vars
+
+src\pages\PremiumShowcase.js
+  Line 325:7:  'vi' is assigned a value but never used   no-unused-vars
+  Line 326:7:  'vi2' is assigned a value but never used  no-unused-vars
+
+src\pages\ProductPage.js
+  Line 34:51:  'authLoading' is assigned a value but never used      no-unused-vars
+  Line 184:9:  'handleAddToCart' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  484.65 kB  build\static\js\main.c3648288.js
+  22.76 kB   build\static\css\main.fb61b96c.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

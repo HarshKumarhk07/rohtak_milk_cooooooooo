@@ -67,6 +67,7 @@ const cookieParser = require('cookie-parser');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const googleAuthRoutes = require('./routes/googleAuthRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
@@ -87,10 +88,10 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:3000",
   "https://gaon-se-ghar-tak.vercel.app",
-  "https://gaonseghartak.in",
-  "https://www.gaonseghartak.in",
-  "http://gaonseghartak.in",
-  "http://www.gaonseghartak.in"
+  "https://rohtakmilkcompany.in",
+  "https://www.rohtakmilkcompany.in",
+  "http://rohtakmilkcompany.in",
+  "http://www.rohtakmilkcompany.in"
 ];
 
 app.use(cors({
@@ -106,6 +107,7 @@ app.use(cors({
 
 // Use routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', googleAuthRoutes); // POST /api/auth/google
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/delivery', deliveryRoutes);

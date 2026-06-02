@@ -6,6 +6,7 @@ import apiClient from '../services/apiClient';
 import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const markerIcon = new L.Icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -79,7 +80,7 @@ const CartPage = () => {
 
         const checkStatus = async () => {
             try {
-                const { data } = await apiClient.get('/orders/status');
+                await apiClient.get('/orders/status');
                 // Temporarily disabling the status check for testing (User request)
                 // setOrderStatus(data); 
                 setOrderStatus({ isOpen: true, reason: '' });
@@ -208,7 +209,7 @@ const CartPage = () => {
                 key: razorpayOrder.key_id,
                 amount: razorpayOrder.amount,
                 currency: razorpayOrder.currency,
-                name: "Gaon se ghar tak",
+                name: "Rohtak Milk Company",
                 description: `Order #${createdOrder.orderNumber}`,
                 order_id: razorpayOrder.id,
                 handler: async function (response) {
@@ -285,7 +286,7 @@ const CartPage = () => {
                                             <div className="flex items-center sm:items-start">
                                                 <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                                                     <img
-                                                        src={item.images[0]}
+                                                        src={resolveProductImage(item, 0)}
                                                         alt={item.name}
                                                         className="w-full h-full object-contain mix-blend-multiply"
                                                     />

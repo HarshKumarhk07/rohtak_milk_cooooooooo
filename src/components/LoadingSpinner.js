@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { resolveSectionImage } from "../utils/dairyImageResolver";
 
 const LoadingSpinner = () => {
   return (
@@ -17,37 +18,17 @@ const LoadingSpinner = () => {
           className="absolute inset-0 rounded-full border-4 border-dashed border-green-500 opacity-20"
         />
 
-        {/* Grocery Image with entrance animation */}
+        {/* Dairy image with entrance animation */}
         <motion.div
-          initial={{ scale: 0.8, y: 20 }}
+          initial={{ scale: 0.9, y: 10 }}
           animate={{ scale: 1, y: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 260,
-            damping: 20
-          }}
+          transition={{ type: "spring", stiffness: 220, damping: 20 }}
         >
           <img
-            src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=500&q=80"
-            alt="Loading..."
+            src={resolveSectionImage('loading')}
+            alt="Loading dairy content"
             className="w-36 h-36 md:w-52 md:h-52 object-cover rounded-full shadow-2xl border-4 border-white animate-pulse"
           />
-        </motion.div>
-
-        {/* Floating fruit icons */}
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute -top-4 -right-4 bg-white p-2 rounded-full shadow-lg text-2xl"
-        >
-          🍎
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
-          className="absolute -bottom-2 -left-4 bg-white p-2 rounded-full shadow-lg text-2xl"
-        >
-          🥦
         </motion.div>
       </div>
 
@@ -58,10 +39,10 @@ const LoadingSpinner = () => {
         transition={{ delay: 0.3 }}
       >
         <h3 className="font-serif text-2xl md:text-4xl font-bold bg-gradient-to-r from-green-800 to-green-600 text-transparent bg-clip-text">
-          Good things take time
+          Fresh Dairy, Delivered
         </h3>
         <p className="mt-3 text-gray-800 text-sm md:text-lg font-bold tracking-wide">
-          Hand-picking the freshest products for you...
+          Preparing your milk and dairy items for safe delivery...
         </p>
       </motion.div>
     </motion.div>

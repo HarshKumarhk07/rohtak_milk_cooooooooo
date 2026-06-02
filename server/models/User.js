@@ -5,7 +5,20 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  // Password is required only for accounts that don't sign in via a federated
+  // provider (e.g. Google). Google users authenticate through Firebase and
+  // therefore have no local password.
+  password: {
+    type: String,
+    required: function () {
+      return !this.firebaseUid;
+    },
+  },
+  // Firebase UID for Google (federated) accounts. Sparse + unique so that
+  // multiple password-only users (without this field) don't collide.
+  firebaseUid: { type: String, unique: true, sparse: true },
+  // Profile photo URL (populated from Google photoURL for Google users).
+  avatar: { type: String },
   phone: { type: String },
   role: { type: String, enum: ['customer', 'admin', 'delivery'], default: 'customer' },
   isVerified: { type: Boolean, default: false },

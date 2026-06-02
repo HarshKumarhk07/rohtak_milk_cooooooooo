@@ -4,39 +4,40 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { IoStarSharp } from 'react-icons/io5';
+import { dairyAssets } from '../utils/dairyImageResolver';
 
 // Assets
 // Assets from public/assets
-const person1 = "/tomato.jpg";
-const person2 = "/banana.jpg";
-const person3 = "/milk.jpg";
+const person1 = dairyAssets.testimonialFamily;
+const person2 = dairyAssets.testimonialDelivery;
+const person3 = dairyAssets.testimonialFamily;
 
 const testimonials = [
   {
     id: 1,
     name: 'Rohit Kumar',
     review:
-      'The vegetables are incredibly fresh and organic. I have never seen such high quality in local stores. Highly recommended!',
+      'The daily milk subscription is fantastic — always fresh, creamy and delivered on time. My family loves it!',
     rating: 5,
     ratingsCount: 128,
     userImage: person1,
-    productImage: "/tomato.jpg",
-    productName: 'Organic Red Tomatoes',
-    tagline: 'Farm Fresh Goodness',
-    desc: 'Deep red, juice-filled tomatoes sourced from certified organic farms. Perfect for your daily gourmet cooking.',
+    productImage: dairyAssets.productCowMilk,
+    productName: 'Full Cream Milk',
+    tagline: 'Pure Dairy Goodness',
+    desc: 'Fresh full cream milk delivered daily from trusted local farms.',
   },
   {
     id: 2,
     name: 'Anjali Sharma',
     review:
-      'The best fruits in town! The bananas were sweet and perfectly ripe. The delivery was also super fast.',
+      'Paneer and curd are always fresh and rich in taste. Great packaging and timely delivery.',
     rating: 5,
     ratingsCount: 96,
     userImage: person2,
-    productImage: "/banana.jpg",
-    productName: 'Premium Cavendish Bananas',
-    tagline: 'Nature\'s Sweetest Snack',
-    desc: 'Naturally ripened, pesticide-free bananas. A great source of energy and nutrients for your family.',
+    productImage: dairyAssets.productPaneer,
+    productName: 'Homestyle Paneer',
+    tagline: 'Creamy & Fresh',
+    desc: 'Soft, hand-pressed paneer made from fresh milk for authentic Indian recipes.',
   },
   {
     id: 3,
@@ -46,7 +47,7 @@ const testimonials = [
     rating: 5,
     ratingsCount: 142,
     userImage: person3,
-    productImage: "/milk.jpg",
+    productImage: dairyAssets.productButtermilk,
     productName: 'Full Cream Farm Milk',
     tagline: 'Pure & Wholesome',
     desc: 'Freshly pasteurized full cream milk with no additives. Rich in calcium and essential vitamins.',

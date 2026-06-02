@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import apiClient from '../services/apiClient';
+import { resolveCategoryImage } from '../utils/dairyImageResolver';
 
 const CategorySection = () => {
     const [categories, setCategories] = useState([]);
@@ -44,7 +45,7 @@ const CategorySection = () => {
                                 className="group relative h-20 md:h-52 overflow-hidden rounded-xl bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100"
                             >
                                 <img
-                                    src={category.image}
+                                    src={resolveCategoryImage(category)}
                                     alt={category.name}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />

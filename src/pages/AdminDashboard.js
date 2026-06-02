@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 import ProductManagement from '../components/ProductManagement';
 import UserManagement from '../components/UserManagement';
@@ -183,7 +184,7 @@ const AdminDashboard = () => {
                                             {order.orderItems.map((item) => (
                                                 <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
                                                     <img
-                                                        src={item.product?.images?.[0]}
+                                                        src={resolveProductImage(item.product, 0)}
                                                         alt={item.name}
                                                         className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
                                                     />
@@ -231,7 +232,7 @@ const AdminDashboard = () => {
                                             {order.orderItems.map((item) => (
                                                 <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
                                                     <img
-                                                        src={item.product?.images?.[0]}
+                                                        src={resolveProductImage(item.product, 0)}
                                                         alt={item.name}
                                                         className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
                                                     />

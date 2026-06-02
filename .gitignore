@@ -12,7 +12,7 @@ yarn.lock
 server/.env
 server/node_modules
 
-# Environment variables
+# Environment variables3
 .env
 .env.local
 .env.*.local

@@ -14,6 +14,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import apiClient from "../services/apiClient";
+import { resolveCategoryImage } from "../utils/dairyImageResolver";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -238,7 +239,7 @@ const Header = () => {
     { name: "Shop All", path: "/products" },
     { name: "Blog", path: "/blog" },
     { name: "Contact", path: "/contact" },
-    { name: "Visit our khet", path: "/book-appointment" }];
+    { name: "Dairy Tours", path: "/book-appointment" }];
 
   const isActive = (path) => location.pathname === path;
 
@@ -255,10 +256,10 @@ const Header = () => {
       {/* Promo bar */}
       <div className="bg-green-600 text-white py-1.5 px-2 text-[9px] md:text-xs font-bold tracking-widest uppercase overflow-hidden relative">
         <div className="flex animate-marquee whitespace-nowrap min-w-max">
-          <span className="px-4">Fresh Organic Vegetables at your doorstep. Get 20% off on your first order!</span>
-          <span className="px-4">Fresh Organic Vegetables at your doorstep. Get 20% off on your first order!</span>
-          <span className="px-4">Fresh Organic Vegetables at your doorstep. Get 20% off on your first order!</span>
-          <span className="px-4">Fresh Organic Vegetables at your doorstep. Get 20% off on your first order!</span>
+          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
+          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
+          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
+          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
         </div>
       </div>
 
@@ -272,9 +273,9 @@ const Header = () => {
         <Link
           to="/"
           className="flex items-center transition-all duration-300"
-          aria-label="Gaon Se Ghar Tak Home"
+          aria-label="Rohtak Milk Company Home"
         >
-          <img src="/logo-2.jpeg" alt="Gaon Se Ghar Tak" className="h-[32px] w-[115px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
+          <img src="/final_logo_image.png" alt="Rohtak Milk Company" className="h-[32px] w-[115px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
         </Link>
 
         {/* Desktop Nav */}
@@ -440,7 +441,7 @@ const Header = () => {
           {/* Menu Header */}
           <div className="p-5 border-b flex items-center justify-between bg-gray-50">
             <Link to="/" onClick={toggleMenu}>
-              <img src="/logo-2.jpeg" alt="Logo" className="h-10 w-auto object-contain mix-blend-multiply" />
+              <img src="/final_logo_image.png" alt="Logo" className="h-10 w-auto object-contain mix-blend-multiply" />
             </Link>
             <button onClick={toggleMenu} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors"><HiOutlineX className="w-6 h-6" /></button>
           </div>
@@ -517,7 +518,7 @@ const Header = () => {
                           className="flex items-center p-2 text-gray-600 hover:text-green-800 transition-colors"
                         >
                           <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden mr-3">
-                            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                            <img src={resolveCategoryImage(cat)} alt={cat.name} className="w-full h-full object-cover" />
                           </div>
                           <span className="text-sm font-medium">{cat.name}</span>
                         </Link>

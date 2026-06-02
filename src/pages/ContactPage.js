@@ -343,6 +343,7 @@ const ContactPage = () => {
         <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-4">Find Us</h2>
         <div className="rounded-lg overflow-hidden h-[450px]">
           <iframe
+            title="Rohtak Milk Company location map"
             src="https://maps.google.com/maps?q=28.8475,76.5165&hl=en&z=15&output=embed"
             width="100%"
             height="100%"

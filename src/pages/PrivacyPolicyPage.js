@@ -7,7 +7,7 @@ const PrivacyPolicyPage = () => {
                 <h1 className="text-3xl md:text-4xl font-extrabold mb-8 border-b-2 border-gray-100 pb-4">Privacy Policy</h1>
 
                 <p className="mb-6 text-gray-700 leading-relaxed">
-                    At <strong>Gaon Se Ghar Tak</strong>, accessible from gaonseghartak.in, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by Gaon Se Ghar Tak and how we use it.
+                    At <strong>Rohtak Milk Company</strong>, accessible from rohtakmilkcompany.in, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by Rohtak Milk Company and how we use it.
                 </p>
 
                 <section className="mb-8">
@@ -37,21 +37,21 @@ const PrivacyPolicyPage = () => {
                 <section className="mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">3. Log Files</h2>
                     <p className="text-gray-700 leading-relaxed">
-                        Gaon Se Ghar Tak follows a standard procedure of using log files. These files log visitors when they visit websites. All hosting companies do this and a part of hosting services' analytics. The information collected by log files include internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks.
+                        Rohtak Milk Company follows a standard procedure of using log files. These files log visitors when they visit websites. All hosting companies do this and a part of hosting services' analytics. The information collected by log files include internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks.
                     </p>
                 </section>
 
                 <section className="mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">4. Cookies and Web Beacons</h2>
                     <p className="text-gray-700 leading-relaxed">
-                        Like any other website, Gaon Se Ghar Tak uses 'cookies'. These cookies are used to store information including visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is used to optimize the users' experience by customizing our web page content based on visitors' browser type and/or other information.
+                        Like any other website, Rohtak Milk Company uses 'cookies'. These cookies are used to store information including visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is used to optimize the users' experience by customizing our web page content based on visitors' browser type and/or other information.
                     </p>
                 </section>
 
                 <section className="mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">5. Contact Us</h2>
                     <p className="text-gray-700 leading-relaxed">
-                        If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us at <strong>Gaonseghartak1@gmail.com</strong>.
+                        If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us at <strong>rohtakmilkcompany@gmail.com</strong>.
                     </p>
                 </section>
 

@@ -9,17 +9,17 @@ const TermsConditionsPage = () => {
                 <section className="mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">1. Introduction</h2>
                     <p className="mb-4 text-gray-700 leading-relaxed">
-                        Welcome to <strong>Gaon Se Ghar Tak</strong>. These terms and conditions outline the rules and regulations for the use of Gaon Se Ghar Tak's Website, located at gaonseghartak.in.
+                        Welcome to <strong>Rohtak Milk Company</strong>. These terms and conditions outline the rules and regulations for the use of Rohtak Milk Company's Website, located at rohtakmilkcompany.in.
                     </p>
                     <p className="mb-4 text-gray-700 leading-relaxed">
-                        By accessing this website we assume you accept these terms and conditions. Do not continue to use Gaon Se Ghar Tak if you do not agree to take all of the terms and conditions stated on this page.
+                        By accessing this website we assume you accept these terms and conditions. Do not continue to use Rohtak Milk Company if you do not agree to take all of the terms and conditions stated on this page.
                     </p>
                 </section>
 
                 <section className="mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">2. Intellectual Property Rights</h2>
                     <p className="mb-4 text-gray-700 leading-relaxed">
-                        Other than the content you own, under these Terms, Gaon Se Ghar Tak and/or its licensors own all the intellectual property rights and materials contained in this Website.
+                        Other than the content you own, under these Terms, Rohtak Milk Company and/or its licensors own all the intellectual property rights and materials contained in this Website.
                     </p>
                     <p className="mb-4 text-gray-700 leading-relaxed">
                         You are granted limited license only for purposes of viewing the material contained on this Website.

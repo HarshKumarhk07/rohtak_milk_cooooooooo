@@ -17,6 +17,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import ProductCard from "../components/ProductCard";
+import { isDairyImageUrl, resolveProductImage } from "../utils/dairyImageResolver";
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const { user, wishlist, fetchWishlist, loading: authLoading } = useAuth();
+  const { user, wishlist, fetchWishlist } = useAuth();
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [heartAnimation, setHeartAnimation] = useState(false);
@@ -180,7 +181,7 @@ const ProductPage = () => {
     }
   }, [availableVariants]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (buyNow = false) => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
@@ -217,7 +218,11 @@ const ProductPage = () => {
       },
     };
     addToCart(productToAdd);
-    alert(`${product.name} (${selectedVariant.size}) added to cart!`);
+    if (buyNow) {
+      navigate("/cart");
+    } else {
+      alert(`${product.name} (${selectedVariant.size}) added to cart!`);
+    }
   };
 
   const isVideo = (url) => {
@@ -225,6 +230,11 @@ const ProductPage = () => {
     const videoExtensions = [".mp4", ".mov", ".webm", ".ogg", ".m4v"];
     return videoExtensions.some((ext) => url.toLowerCase().includes(ext)) || url.includes("/video/upload/");
   };
+
+  const galleryImages = product?.images?.length > 0 ? product.images : [resolveProductImage(product || {}, 0)];
+  const activeSourceUrl = galleryImages[activeImageIndex];
+  const activeDisplayUrl = product ? resolveProductImage(product, activeImageIndex) : '';
+  const activeIsVideo = Boolean(activeSourceUrl && isVideo(activeSourceUrl) && isDairyImageUrl(activeSourceUrl));
 
   const maskPhoneNumber = (phone = "") => {
     const digits = String(phone).replace(/\D/g, "");
@@ -234,14 +244,14 @@ const ProductPage = () => {
 
   const nextImage = () => {
     setActiveImageIndex(
-      (prevIndex) => (prevIndex + 1) % product.images.length
+      (prevIndex) => (prevIndex + 1) % galleryImages.length
     );
   };
 
   const prevImage = () => {
     setActiveImageIndex(
       (prevIndex) =>
-        (prevIndex - 1 + product.images.length) % product.images.length
+        (prevIndex - 1 + galleryImages.length) % galleryImages.length
     );
   };
 
@@ -339,7 +349,7 @@ const ProductPage = () => {
             onClick={() => setIsFullScreen(false)}
           >
             <motion.img
-              src={product.images[activeImageIndex]}
+              src={activeDisplayUrl}
               alt={product.name}
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
@@ -359,14 +369,14 @@ const ProductPage = () => {
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setIsZoomed(false)}
             onClick={() => {
-              if (isMobile && !isVideo(product.images[activeImageIndex])) {
+              if (isMobile && !activeIsVideo) {
                 setIsFullScreen(true);
               }
             }}
           >
-            {isVideo(product.images[activeImageIndex]) ? (
+            {activeIsVideo ? (
               <video
-                src={product.images[activeImageIndex]}
+                src={activeSourceUrl}
                 controls
                 autoPlay
                 loop
@@ -376,7 +386,7 @@ const ProductPage = () => {
               />
             ) : (
               <img
-                src={product.images[activeImageIndex]}
+                src={activeDisplayUrl}
                 alt={product.name}
                 className={`w-full h-full object-contain p-4 transition-transform duration-500 ease-in-out ${isZoomed && !isMobile ? "scale-110" : "scale-100"
                   }`}
@@ -397,7 +407,7 @@ const ProductPage = () => {
               )}
 
             {/* Desktop zoom toggle */}
-            {!isVideo(product.images[activeImageIndex]) && !isMobile && (
+            {!activeIsVideo && !isMobile && (
               <button
                 onClick={() => setIsZoomed(!isZoomed)}
                 className="hidden md:flex absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition z-30"
@@ -416,7 +426,7 @@ const ProductPage = () => {
               <div
                 className="hidden md:block absolute top-0 left-0 w-full h-full cursor-none z-20"
                 style={{
-                  backgroundImage: `url(${product.images[activeImageIndex]})`,
+                  backgroundImage: `url(${activeDisplayUrl})`,
                   backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
                   backgroundSize: "200%",
                 }}
@@ -424,7 +434,7 @@ const ProductPage = () => {
             )}
 
             {/* Mobile zoom icon */}
-            {!isVideo(product.images[activeImageIndex]) && isMobile && (
+            {!activeIsVideo && isMobile && (
               <button
                 onClick={() => setIsFullScreen(true)}
                 className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition z-30"
@@ -435,7 +445,7 @@ const ProductPage = () => {
             )}
 
             {/* Navigation arrows */}
-            {product.images.length > 1 && (
+            {galleryImages.length > 1 && (
               <>
                 <button
                   onClick={prevImage}
@@ -455,7 +465,7 @@ const ProductPage = () => {
 
           {/* Thumbnail grid */}
           <div className="flex space-x-2 md:space-x-4 mt-4 overflow-x-auto pb-4">
-            {product.images.map((img, index) => (
+            {galleryImages.map((img, index) => (
               <div
                 key={index}
                 className={`flex-shrink-0 w-16 h-16 md:w-24 md:h-24 overflow-hidden rounded-md cursor-pointer border-2 transition-all duration-300 ${activeImageIndex === index
@@ -466,11 +476,11 @@ const ProductPage = () => {
                   setActiveImageIndex(index);
                 }}
               >
-                {isVideo(img) ? (
+                {isVideo(img) && isDairyImageUrl(img) ? (
                   <video src={img} muted playsInline className="w-full h-full object-cover" />
                 ) : (
                   <img
-                    src={img}
+                    src={resolveProductImage(product, index)}
                     alt={`${product.name} thumbnail ${index}`}
                     className="w-full h-full object-cover"
                   />
@@ -652,9 +662,8 @@ const ProductPage = () => {
             </div>
           </div>
 
-          {/* Action Button */}
-          {/* --- Add to Cart button disabled for "Coming Soon" launch (code kept, only commented out) ---
-          <div className="mt-8">
+          {/* Action Buttons */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
             {product.isComingSoon ? (
               <button
                 className="w-full bg-yellow-500 text-white font-bold py-3 md:py-4 rounded-md text-base md:text-lg cursor-not-allowed shadow-md"
@@ -663,15 +672,25 @@ const ProductPage = () => {
                 Coming Soon
               </button>
             ) : (selectedPincode.length === 6 && selectedVariant && effectiveStock > 0 && !isUnavailableForPincode) ? (
-              <button
-                onClick={handleAddToCart}
-                className={`w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg ${isAuthenticated
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.02]"
-                  }`}
-              >
-                {isAuthenticated ? 'Add to Cart' : 'Login to Buy'}
-              </button>
+              <>
+                <button
+                  onClick={() => handleAddToCart(false)}
+                  className={`w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg ${isAuthenticated
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.02]"
+                    }`}
+                >
+                  {isAuthenticated ? 'Add to Cart' : 'Login to Buy'}
+                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => handleAddToCart(true)}
+                    className="w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg bg-yellow-500 text-black hover:bg-yellow-600"
+                  >
+                    Buy Now
+                  </button>
+                )}
+              </>
             ) : (
               <button
                 className="w-full bg-gray-400 text-white font-bold py-3 md:py-4 rounded-md text-base md:text-lg cursor-not-allowed shadow-md"
@@ -681,7 +700,6 @@ const ProductPage = () => {
               </button>
             )}
           </div>
-          --- */}
         </div>
       </div>
 
@@ -723,11 +741,11 @@ const ProductPage = () => {
               <div className="absolute top-0 left-0 w-full h-1.5 bg-green-600"></div>
 
               <h3 className="text-lg md:text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight">
-                Authentic Farm Experience
+                Authentic Dairy Experience
               </h3>
 
               <p className="text-xs md:text-base text-gray-600 leading-relaxed mb-6 max-w-2xl">
-                Go beyond the product and witness the purity firsthand. Join us for a personalized farm tour where you can see our heritage practices in action, connect with nature, and explore our chemical-free ecosystem through traditional farming techniques.
+                Go beyond the product and witness the purity firsthand. Join us for a personalized dairy tour where you can see our milk collection and quality practices in action, connect with the production process, and learn about our hygienic handling standards.
               </p>
 
               <div className="w-full max-w-4xl mb-8">
@@ -745,7 +763,7 @@ const ProductPage = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-center gap-2 bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
                       <span className="text-green-600 font-bold text-[10px] md:text-xs">✓</span>
-                      <span className="text-[9px] md:text-[11px] text-gray-700 font-semibold text-left">Guided Field Tours</span>
+                      <span className="text-[9px] md:text-[11px] text-gray-700 font-semibold text-left">Guided Dairy Tours</span>
                     </div>
                     <div className="flex items-center gap-2 bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
                       <span className="text-green-600 font-bold text-[10px] md:text-xs">✓</span>
@@ -753,7 +771,7 @@ const ProductPage = () => {
                     </div>
                     <div className="flex items-center gap-2 bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
                       <span className="text-green-600 font-bold text-[10px] md:text-xs">✓</span>
-                      <span className="text-[9px] md:text-[11px] text-gray-700 font-semibold text-left">Seasonal Harvesting</span>
+                      <span className="text-[9px] md:text-[11px] text-gray-700 font-semibold text-left">Milk Collection Process</span>
                     </div>
                     <div className="flex items-center gap-2 bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
                       <span className="text-green-600 font-bold text-[10px] md:text-xs">✓</span>

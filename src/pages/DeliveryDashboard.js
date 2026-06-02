@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-import DeliveredOrdersAnalytics from '../components/DeliveredOrdersAnalytics';
 import LiveLocationTracker from '../components/LiveLocationTracker';
 import moment from 'moment';
 import apiClient from '../services/apiClient';

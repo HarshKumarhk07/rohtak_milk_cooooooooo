@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 import apiClient from '../services/apiClient';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -174,51 +175,6 @@ const ProductManagement = () => {
       setImages(images.filter((_, index) => index !== indexToRemove));
       setImagePreviews(imagePreviews.filter((_, index) => index !== indexToRemove));
     }
-  };
-
-  const handleVariantChange = (index, e) => {
-    const { name, value } = e.target;
-    const newVariants = [...variants];
-    newVariants[index][name] = value;
-
-    const original = parseFloat(newVariants[index].originalPrice);
-    const disc = parseFloat(newVariants[index].discount);
-    const price = parseFloat(newVariants[index].price);
-
-    if (name === 'originalPrice') {
-      if (!isNaN(original) && original > 0) {
-        if (!isNaN(price)) {
-          newVariants[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
-        } else if (!isNaN(disc)) {
-          newVariants[index].price = Math.round(original - (original * disc / 100));
-        }
-      }
-    } else if (name === 'discount') {
-      if (!isNaN(disc)) {
-        if (!isNaN(price) && disc < 100) {
-          newVariants[index].originalPrice = Math.round(price / (1 - disc / 100));
-        } else if (!isNaN(original)) {
-          newVariants[index].price = Math.round(original - (original * disc / 100));
-        }
-      }
-    } else if (name === 'price') {
-      if (!isNaN(price)) {
-        if (!isNaN(original) && original > 0) {
-          newVariants[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
-        } else if (!isNaN(disc) && disc < 100) {
-          newVariants[index].originalPrice = Math.round(price / (1 - disc / 100));
-        }
-      }
-    }
-
-    setVariants(newVariants);
-  };
-
-  const addVariant = () => setVariants([...variants, { size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
-  const removeVariant = (index) => {
-    const newVariants = [...variants];
-    newVariants.splice(index, 1);
-    setVariants(newVariants);
   };
 
   const normalizeSize = (size) => size ? size.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9]/g, '').trim() : '';
@@ -673,7 +629,7 @@ const ProductManagement = () => {
               name="subCategory"
               value={formData.subCategory}
               onChange={handleInputChange}
-              placeholder="e.g. Fruits, Dairy"
+              placeholder="e.g. Dairy, Milk, Paneer"
               className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
@@ -804,7 +760,7 @@ const ProductManagement = () => {
             <div key={product._id} className="flex flex-col p-4 bg-gray-50 border rounded-3xl hover:shadow-xl hover:bg-white transition-all duration-300 group">
               <div className="flex items-start space-x-4">
                 <div className="relative min-w-[80px] h-[80px]">
-                  <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover rounded-2xl shadow-sm border border-white" />
+                  <img src={resolveProductImage(product, 0)} alt={product.name} className="w-full h-full object-cover rounded-2xl shadow-sm border border-white" />
                   {product.variants.every(v => v.countInStock <= 0) && (product.pincodePricing || []).every(p => p.inventory <= 0) && (
                     <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg">OUT</span>
                   )}

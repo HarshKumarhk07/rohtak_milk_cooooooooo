@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 import { FaMapMarkerAlt, FaBoxes, FaSearch, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 const FranchiseStockManagement = () => {
@@ -160,7 +161,7 @@ const FranchiseStockManagement = () => {
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
                                                                 <img
-                                                                    src={prod.images?.[0]}
+                                                                    src={resolveProductImage(prod, 0)}
                                                                     alt={prod.name}
                                                                     className="w-10 h-10 object-cover rounded-md bg-gray-100"
                                                                 />

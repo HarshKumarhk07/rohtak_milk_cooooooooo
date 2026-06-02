@@ -8,7 +8,7 @@ const sendOTP = async (email, otp) => {
 
   const apiKey = process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.trim() : null;
   const emailFrom = process.env.EMAIL_FROM ? process.env.EMAIL_FROM.trim() : null;
-  const fromName = process.env.FROM_NAME ? process.env.FROM_NAME.trim() : 'Gaon Se Ghar Tak';
+  const fromName = process.env.FROM_NAME ? process.env.FROM_NAME.trim() : 'Rohtak Milk Company';
 
   if (!apiKey) {
     console.error('CRITICAL: SENDGRID_API_KEY is not defined in env!');
@@ -28,7 +28,7 @@ const sendOTP = async (email, otp) => {
       email: emailFrom,
       name: fromName,
     },
-    subject: 'Your OTP for Gaon Se Ghar Tak',
+    subject: 'Your OTP for Rohtak Milk Company',
     text: `Your One-Time Password is: ${otp}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -43,7 +43,7 @@ const sendOTP = async (email, otp) => {
         </p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 12px; color: #aaa; text-align: center;">
-          Gaon Se Ghar Tak - Connecting you to your roots.
+          Rohtak Milk Company - Connecting you to your roots.
         </p>
       </div>
     `,
@@ -72,7 +72,7 @@ const sendLockoutEmail = async (email) => {
 
   const apiKey = process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.trim() : null;
   const emailFrom = process.env.EMAIL_FROM ? process.env.EMAIL_FROM.trim() : null;
-  const fromName = process.env.FROM_NAME ? process.env.FROM_NAME.trim() : 'Gaon Se Ghar Tak';
+  const fromName = process.env.FROM_NAME ? process.env.FROM_NAME.trim() : 'Rohtak Milk Company';
 
   if (!apiKey || !emailFrom) {
     console.error('Email service configuration missing.');
@@ -102,7 +102,7 @@ const sendLockoutEmail = async (email) => {
         </p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 12px; color: #aaa; text-align: center;">
-          Gaon Se Ghar Tak - Security Notification
+          Rohtak Milk Company - Security Notification
         </p>
       </div>
     `,

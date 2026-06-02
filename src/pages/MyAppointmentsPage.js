@@ -45,7 +45,7 @@ const MyAppointmentsPage = () => {
                     </div>
                     <div>
                         <h1 className="text-3xl font-black text-gray-900">Your Appointments</h1>
-                        <p className="text-gray-500">Track your farm visits and scheduled meetings.</p>
+                        <p className="text-gray-500">Track your dairy tours and scheduled visits.</p>
                     </div>
                 </div>
 
@@ -57,7 +57,7 @@ const MyAppointmentsPage = () => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                         <FaCalendarTimes className="mx-auto text-5xl text-gray-200 mb-4" />
                         <h3 className="text-xl font-bold text-gray-800 mb-2">No Appointments Found</h3>
-                        <p className="text-gray-500 mb-6">You haven't scheduled any farm visits yet.</p>
+                        <p className="text-gray-500 mb-6">You haven't scheduled any dairy tours yet.</p>
                         <a href="/book-appointment" className="inline-flex items-center px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100">
                             Book Now
                         </a>
@@ -99,8 +99,8 @@ const MyAppointmentsPage = () => {
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</p>
-                                                <p className="font-bold text-gray-800">Gaon Se Ghar Tak Farm</p>
-                                                <p className="text-sm text-gray-600">Organic Farming Zone</p>
+                                                <p className="font-bold text-gray-800">Rohtak Milk Company</p>
+                                                <p className="text-sm text-gray-600">Dairy Processing Unit</p>
                                             </div>
                                         </div>
 

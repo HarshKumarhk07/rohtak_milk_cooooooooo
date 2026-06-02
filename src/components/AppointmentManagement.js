@@ -78,8 +78,8 @@ const AppointmentManagement = () => {
     if (loading) return <div>Loading appointments...</div>;
 
     return (
-        <div className="bg-white p-3 md:p-6 rounded-lg shadow-md">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Farm Appointments</h2>
+            <div className="bg-white p-3 md:p-6 rounded-lg shadow-md">
+                <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Dairy Tours</h2>
 
             {/* Filter Section */}
             <div className="flex flex-wrap gap-4 mb-6">

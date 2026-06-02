@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import apiClient from '../services/apiClient';
+import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const CompletedCancelledRequests = ({ type }) => {
     const [requests, setRequests] = useState([]);
@@ -114,15 +115,11 @@ const CompletedCancelledRequests = ({ type }) => {
                                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <p className="font-semibold text-gray-700 mb-2">Requested Product ({request.type}):</p>
                                     <div className="flex items-center space-x-4">
-                                        {request.originalItem?.product?.images?.[0] ? (
-                                            <img
-                                                src={request.originalItem.product.images[0]}
-                                                alt={request.originalItem.name}
-                                                className="w-20 h-20 object-cover rounded shadow-sm bg-white"
-                                            />
-                                        ) : (
-                                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400 text-center">No Image</div>
-                                        )}
+                                        <img
+                                            src={resolveProductImage(request.originalItem?.product, 0)}
+                                            alt={request.originalItem.name}
+                                            className="w-20 h-20 object-cover rounded shadow-sm bg-white"
+                                        />
                                         <div>
                                             <p className="font-bold text-gray-800 leading-tight">{request.originalItem?.name || 'Product Not Found'}</p>
                                             <p className="text-sm text-gray-500 mt-1">Qty: {request.originalItem?.qty} | Pack: {request.originalItem?.size}</p>

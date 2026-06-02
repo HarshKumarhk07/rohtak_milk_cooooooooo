@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
-import { FaLeaf, FaUsers, FaClock, FaShoppingBasket, FaCheckCircle, FaSeedling, FaMapMarkedAlt, FaLock } from 'react-icons/fa';
+import { FaCheckCircle, FaSeedling, FaMapMarkedAlt, FaLock } from 'react-icons/fa';
 
 const AppointmentBookingPage = () => {
     const [formData, setFormData] = useState({
@@ -51,22 +51,22 @@ const AppointmentBookingPage = () => {
                     <div className="space-y-6">
                         <div className="inline-flex items-center space-x-2 bg-green-100 text-green-700 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em] shadow-sm">
                             <FaSeedling className="animate-bounce" />
-                            <span>Premium Farm Experience</span>
+                            <span>Premium Dairy Experience</span>
                         </div>
                         <h1 className="text-6xl font-black text-gray-900 leading-[1.1]">
-                            Authentic <span className="text-green-600">Farm-to-Table</span> Journey
+                            Pure <span className="text-green-600">Dairy</span> Experience
                         </h1>
                         <p className="text-xl text-gray-600 leading-relaxed text-justify">
-                            Fresh & Pure farming. Our doors are open for those who value purity and health. Whether you're interested in understanding soil health, traditional pest management, or simply want to breathe fresh air, this visit will change your perspective on food forever.
+                            Visit our dairy farms and processing units to learn about milk collection, hygiene practices, and subscription options for daily milk delivery.
                         </p>
                     </div>
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 gap-4">
-                            {[
-                                { title: "Purity at its Source", desc: "Experience chemical-free farming and see how we maintain soil health naturally." },
-                                { title: "Farmer's Insight", desc: "Interact directly with local farmers to learn about traditional agricultural wisdom." },
-                                { title: "Fresh Harvest", desc: "Get the opportunity to hand-pick and purchase current seasonal produce." }
+                                {[
+                                { title: "Purity at its Source", desc: "See milk collection and hygienic handling at source to ensure purity." },
+                                { title: "Dairy Insight", desc: "Interact with our dairy experts to understand milk quality and handling." },
+                                { title: "Fresh Milk Experience", desc: "Taste fresh milk and dairy products, and learn about subscription options." }
                             ].map((item, index) => (
                                 <div key={index} className="flex items-start space-x-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-green-200 transition-colors">
                                     <div className="mt-1">

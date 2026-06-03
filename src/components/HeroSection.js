@@ -152,7 +152,7 @@ const HeroSection = () => {
                   src={src}
                   alt={`Promotional banner ${idx + 1}`}
                   onError={() => handleBannerError(src)}
-                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 transform group-hover:scale-105 ${idx === currentBanner ? "opacity-100" : "opacity-0"}`}
+                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-[1200ms] ease-in-out will-change-[opacity,transform] ${idx === currentBanner ? "opacity-100 z-[1] banner-kenburns" : "opacity-0 z-0"}`}
                 />
               ))}
               <div className="absolute inset-0 bg-gradient-to-r from-[#2e7d32] via-[#2e7d32]/30 to-transparent"></div>
@@ -183,8 +183,8 @@ const HeroSection = () => {
               >
                 <div className="bg-[#b8ead4] rounded-xl overflow-hidden shadow-md relative w-full aspect-[4/5] sm:aspect-square flex flex-col items-center justify-center border border-yellow-600/10 hover:border-yellow-400/60 transition-all duration-500 group">
                   <div className="absolute top-0 left-0 w-full h-[45%] bg-gradient-to-b from-white/40 to-transparent clip-path-dome"></div>
-                  <div className="relative z-10 flex flex-col items-center w-full h-full pt-2 md:pt-8">
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-44 lg:h-44 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.3)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
+                  <div className="relative z-10 flex flex-col items-center w-full h-full pt-2 md:pt-4">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-52 lg:h-52 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.3)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
                       <img src={resolveCategoryImage(cat)} alt={cat.name} className="w-full h-full object-cover rounded-md" />
                     </div>
                     <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1 md:py-1.5 group-hover:bg-white/40 transition-colors">
@@ -222,6 +222,8 @@ const HeroSection = () => {
         .clip-path-dome { clip-path: ellipse(60% 70% at 50% 0%); background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .banner-kenburns { animation: bannerZoom 5.5s ease-out forwards; }
+        @keyframes bannerZoom { from { transform: scale(1); } to { transform: scale(1.08); } }
       `}} />
     </div>
   );

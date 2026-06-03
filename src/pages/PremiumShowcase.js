@@ -324,13 +324,13 @@ import { dairyAssets } from "../utils/dairyImageResolver";
 const sections = [
   {
     id: "b1",
-    img: dairyAssets.heroMilk,
+    img: dairyAssets.productCowMilk,
     title: "Dairy Farm Harvest",
     text: "See how we collect fresh cow and buffalo milk every morning from our trusted local farms, ensuring purity and quality in every bottle.",
   },
   {
     id: "b2",
-    img: dairyAssets.productCowMilk,
+    img: dairyAssets.productBuffaloMilk,
     title: "Milk Varieties",
     text: "Choose from full cream, toned, double-toned, cow milk and buffalo milk — tailored to your family's taste and nutrition needs.",
   },
@@ -348,19 +348,19 @@ const sections = [
   },
   {
     id: "b5",
-    img: dairyAssets.testimonialDelivery,
+    img: dairyAssets.productGhee,
     title: "Subscription Plans",
     text: "Daily, alternate-day, and weekly subscription plans — flexible delivery slots and pause/resume options for your convenience.",
   },
   {
     id: "b6",
-    img: dairyAssets.visitCenter,
+    img: dairyAssets.productButtermilk,
     title: "Hygiene & Safety",
     text: "We follow strict hygiene, temperature control and sealed packaging to deliver dairy products that are safe and nutritious.",
   },
   {
     id: "b7",
-    img: dairyAssets.testimonialFamily,
+    img: dairyAssets.productTonedMilk,
     title: "The Pursuit of Health",
     text: "From farm to door, Rohtak Milk Company is committed to nourishing your family with the best dairy produce.",
   },

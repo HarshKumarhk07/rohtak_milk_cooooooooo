@@ -8,9 +8,9 @@ import { dairyAssets } from '../utils/dairyImageResolver';
 
 // Assets
 // Assets from public/assets
-const person1 = dairyAssets.testimonialFamily;
-const person2 = dairyAssets.testimonialDelivery;
-const person3 = dairyAssets.testimonialFamily;
+const person1 = dairyAssets.productCowMilk;
+const person2 = dairyAssets.productPaneer;
+const person3 = dairyAssets.productButtermilk;
 
 const testimonials = [
   {
@@ -76,23 +76,24 @@ const TestimonialSlider = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Animation
+  // Animation — lightweight tween instead of spring physics so the slide
+  // stays smooth (springs + large images caused noticeable jank/lag).
   const slideVariants = {
     initial: (dir) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
     animate: {
       x: 0,
       opacity: 1,
       transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 },
+        x: { duration: 0.45, ease: [0.4, 0, 0.2, 1] },
+        opacity: { duration: 0.35, ease: 'easeOut' },
       },
     },
     exit: (dir) => ({
       x: dir > 0 ? '-100%' : '100%',
       opacity: 0,
       transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 },
+        x: { duration: 0.45, ease: [0.4, 0, 0.2, 1] },
+        opacity: { duration: 0.35, ease: 'easeOut' },
       },
     }),
   };
@@ -111,7 +112,7 @@ const TestimonialSlider = () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="absolute w-full flex-shrink-0"
+              className="absolute w-full flex-shrink-0 will-change-transform [backface-visibility:hidden]"
             >
               <div className="flex flex-col md:flex-row items-stretch justify-center bg-white rounded-xl shadow-lg w-full overflow-hidden border border-gray-100">
                 {/* User Image Section */}

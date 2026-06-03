@@ -238,6 +238,7 @@ const Header = () => {
     { name: "Best Seller", path: "/products/bestseller" },
     { name: "Shop All", path: "/products" },
     { name: "Blog", path: "/blog" },
+    { name: "About Us", path: "/about" },
     { name: "Contact", path: "/contact" },
     { name: "Dairy Tours", path: "/book-appointment" }];
 

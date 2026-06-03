@@ -5,6 +5,7 @@ import FeaturedProductsSection from '../components/FeaturedProductsSection';
 import BestsellerProductsSection from '../components/BestsellerProductsSection';
 import NewReleaseProductsSection from '../components/NewReleaseProductsSection';
 import VisitInStoreSection from '../components/VisitInStoreSection';
+import FounderSection from '../components/FounderSection';
 import TestimonialSlider from '../components/TestimonialSlider';
 
 const HomePage = () => {
@@ -16,6 +17,7 @@ const HomePage = () => {
             <BestsellerProductsSection />
             <NewReleaseProductsSection />
             <UpcomingSection />
+            <FounderSection />
             <VisitInStoreSection />
             <TestimonialSlider />
         </div>

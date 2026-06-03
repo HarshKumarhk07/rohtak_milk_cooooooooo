@@ -130,10 +130,10 @@ const HeroSection = () => {
                 Subscribe for daily delivery
               </span>
             </div>
-            <h2 className="text-lg md:text-3xl lg:text-5xl font-extrabold text-white leading-tight mb-2 md:mb-4 drop-shadow-md">
+            <h2 className="text-lg md:text-3xl lg:text-5xl font-extrabold text-white leading-tight mb-2 md:mb-4 [text-shadow:_0_2px_6px_rgba(0,0,0,0.5)]">
               Fresh Milk & Dairy Delivered Daily
             </h2>
-            <p className="text-white/90 text-[11px] md:text-lg font-medium mb-3 md:mb-8 max-w-[540px] leading-relaxed">
+            <p className="text-white text-[11px] md:text-lg font-medium mb-3 md:mb-8 max-w-[540px] leading-relaxed [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
               Choose daily, alternate-day or weekly subscriptions for cow & buffalo milk. One-time orders available for curd, paneer and ghee.
             </p>
             <div>
@@ -143,7 +143,7 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="absolute right-0 top-0 w-full md:w-1/2 h-full flex justify-end">
+          <div className="flex absolute right-0 top-0 w-full md:w-1/2 h-full justify-end">
             <div className="w-full h-full relative">
               {/* Rotating banner images from the public/ folder. */}
               {banners.map((src, idx) => (
@@ -152,10 +152,13 @@ const HeroSection = () => {
                   src={src}
                   alt={`Promotional banner ${idx + 1}`}
                   onError={() => handleBannerError(src)}
-                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-[1200ms] ease-in-out will-change-[opacity,transform] ${idx === currentBanner ? "opacity-100 z-[1] banner-kenburns" : "opacity-0 z-0"}`}
+                  className={`absolute inset-0 w-full h-full object-cover object-right transition-opacity duration-[1200ms] ease-in-out will-change-[opacity,transform] ${idx === currentBanner ? "opacity-100 z-[1] banner-kenburns" : "opacity-0 z-0"}`}
                 />
               ))}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#2e7d32] via-[#2e7d32]/30 to-transparent"></div>
+              {/* Green hold on the left fading to reveal the image on the right.
+                  On mobile the image spans the full card, so we keep the green
+                  solid across most of it and only fade at the far right. */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#2e7d32] from-55% to-transparent md:from-0% md:from-[#2e7d32] md:via-[#2e7d32]/30 md:via-50%"></div>
             </div>
           </div>
         </motion.div>

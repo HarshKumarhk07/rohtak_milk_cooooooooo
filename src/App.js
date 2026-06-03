@@ -30,6 +30,7 @@ import GenderProductsPage from './pages/GenderProductsPage';
 import AllRecentProductsPage from "./pages/AllRecentProductsPage";
 import AllBestsellerProductsPage from "./pages/AllBestsellerProductsPage";
 import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
 import AllProductsPage from "./pages/AllProductsPage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import WishlistPage from "./pages/WishlistPage"
@@ -76,6 +77,7 @@ function AppLayout() {
           <Route path="/products/recent" element={<AllRecentProductsPage />} />
           <Route path="/products/bestseller" element={<AllBestsellerProductsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/blog" element={<PremiumShowcase />} />

@@ -378,7 +378,7 @@ const PremiumShowcase = () => {
       >
         {/* Background Image Overlay */}
         <div className="absolute inset-0 z-0">
-          <img src={dairyAssets.heroMilk} alt="Fresh milk pouring into a glass" className="w-full h-full object-cover" />
+          <img src={dairyAssets.productBuffaloMilk} alt="Fresh dairy milk" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
 

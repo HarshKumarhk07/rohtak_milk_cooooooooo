@@ -44,7 +44,10 @@
       "Bash(node -e ' *)",
       "Bash(node --check src/utils/dairyImageResolver.js)",
       "Bash(node --check controllers/categoryController.js)",
-      "Bash(node --check routes/categoryRoutes.js)"
+      "Bash(node --check routes/categoryRoutes.js)",
+      "Bash(ls client *)",
+      "Bash(ls src *)",
+      "Bash(node addPaneerCat.js)"
     ]
   }
 }

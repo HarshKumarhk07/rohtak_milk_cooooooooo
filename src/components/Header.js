@@ -248,8 +248,8 @@ const Header = () => {
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-        ? "backdrop-blur-lg bg-white/80 shadow-lg text-gray-800"
-        : "bg-white/90 backdrop-blur-md text-gray-800 border-b border-gray-100"
+        ? "bg-white shadow-lg text-gray-800"
+        : "bg-white text-gray-800 border-b border-gray-100"
         }`}
       role="banner"
     >

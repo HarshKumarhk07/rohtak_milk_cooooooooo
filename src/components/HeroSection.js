@@ -38,11 +38,43 @@ const dairyData = [
   }
 ];
 
+// Promotional banners live in the public/ folder (banner 1.png, banner 2.png ...).
+// Add more files following the same naming and extend this list to show them.
+const allBanners = [
+  "/banner 1.png",
+  "/banner 2.png",
+  "/banner 3.png",
+  "/banner 4.png",
+];
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Banner carousel state. Any image that fails to load (e.g. banner 4 not
+  // added yet) is automatically dropped so we never show a broken image.
+  const [banners, setBanners] = useState(allBanners);
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  const handleBannerError = (src) => {
+    setBanners((prev) => prev.filter((b) => b !== src));
+  };
+
+  // Auto-advance the banner every 4 seconds.
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const id = setInterval(() => {
+      setCurrentBanner((c) => (c + 1) % banners.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [banners.length]);
+
+  // Keep the active index valid if banners get filtered out.
+  useEffect(() => {
+    if (currentBanner >= banners.length) setCurrentBanner(0);
+  }, [banners.length, currentBanner]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,11 +145,16 @@ const HeroSection = () => {
 
           <div className="absolute right-0 top-0 w-full md:w-1/2 h-full flex justify-end">
             <div className="w-full h-full relative">
-              <img
-                src={dairyAssets.heroMilk}
-                alt="Fresh milk pouring into a glass"
-                className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-[3s]"
-              />
+              {/* Rotating banner images from the public/ folder. */}
+              {banners.map((src, idx) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={`Promotional banner ${idx + 1}`}
+                  onError={() => handleBannerError(src)}
+                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 transform group-hover:scale-105 ${idx === currentBanner ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
               <div className="absolute inset-0 bg-gradient-to-r from-[#2e7d32] via-[#2e7d32]/30 to-transparent"></div>
             </div>
           </div>
@@ -147,7 +184,7 @@ const HeroSection = () => {
                 <div className="bg-[#b8ead4] rounded-xl overflow-hidden shadow-md relative w-full aspect-[4/5] sm:aspect-square flex flex-col items-center justify-center border border-yellow-600/10 hover:border-yellow-400/60 transition-all duration-500 group">
                   <div className="absolute top-0 left-0 w-full h-[45%] bg-gradient-to-b from-white/40 to-transparent clip-path-dome"></div>
                   <div className="relative z-10 flex flex-col items-center w-full h-full pt-2 md:pt-8">
-                    <div className="w-16 h-16 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-32 lg:h-32 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.3)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-44 lg:h-44 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.3)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
                       <img src={resolveCategoryImage(cat)} alt={cat.name} className="w-full h-full object-cover rounded-md" />
                     </div>
                     <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1 md:py-1.5 group-hover:bg-white/40 transition-colors">

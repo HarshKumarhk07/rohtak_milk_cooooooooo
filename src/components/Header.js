@@ -352,6 +352,12 @@ const Header = () => {
               >
                 Your Appointment
               </Link>
+              <Link
+                to="/wallet"
+                className={`transition-colors text-sm font-medium ${isActive("/wallet") ? "text-green-700 font-bold" : "text-gray-600 hover:text-green-800"}`}
+              >
+                Wallet
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-gray-600 hover:text-green-800 transition-colors text-sm font-medium"
@@ -565,6 +571,9 @@ const Header = () => {
                   </Link>
                   <Link to="/my-appointments" onClick={toggleMenu} className={`flex items-center p-2 rounded-lg transition-all ${isActive("/my-appointments") ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-white"}`}>
                     <span className="text-sm font-medium">Your Appointment</span>
+                  </Link>
+                  <Link to="/wallet" onClick={toggleMenu} className={`flex items-center p-2 rounded-lg transition-all ${isActive("/wallet") ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-white"}`}>
+                    <span className="text-sm font-medium">My Wallet</span>
                   </Link>
                 </div>
                 <div className="space-y-3">

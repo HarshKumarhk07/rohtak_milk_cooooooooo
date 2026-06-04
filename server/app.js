@@ -78,6 +78,7 @@ const returnReplaceRoutes = require('./routes/returnReplaceRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const walletRoutes = require('./routes/walletRoutes');
 
 const app = express();
 
@@ -119,6 +120,7 @@ app.use('/api/return-replace', returnReplaceRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Test route
 app.get('/', (req, res) => {

@@ -43,7 +43,21 @@ const orderSchema = new mongoose.Schema({
     expectedDeliveryDate: { type: Date },
     deliveryWindowStart: { type: Date },
     deliveryWindowEnd: { type: Date },
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+    // ---- Wallet refund tracking (set when an admin cancels & refunds) ----
+    // `walletRefunded` is the single source of truth that guards against
+    // duplicate refunds — once true, the order can never be refunded again.
+    walletRefunded: { type: Boolean, default: false },
+    refundAmount: { type: Number, default: 0 },
+    refundedAt: { type: Date },
+    cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    cancelReason: { type: String },
+
+    // ---- Wallet / hybrid payment tracking (set at checkout) ----
+    // How much of this order was paid from the customer's wallet vs Razorpay.
+    walletAmountUsed: { type: Number, default: 0 },
+    razorpayAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

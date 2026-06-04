@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
   otpAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date },
 
+  // Wallet balance (in INR). Credited on admin order cancellations and debited
+  // when the customer pays with wallet. Never updated directly from the client
+  // — only via the server-side wallet service so it cannot be manipulated.
+  walletBalance: { type: Number, default: 0, min: 0 },
+
   wishlist: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     pincode: { type: String }

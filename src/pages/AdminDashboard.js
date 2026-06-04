@@ -128,6 +128,29 @@ const AdminDashboard = () => {
         }
     };
 
+    // Admin-only: cancel an out-of-stock order and refund the full amount to the
+    // customer's wallet. Calls the dedicated wallet-refund endpoint which is
+    // idempotent (a given order can only ever be refunded once).
+    const handleCancelRefund = async (order) => {
+        const confirmCancel = window.confirm(
+            `Cancel order ${order.orderNumber} and refund ₹${order.totalPrice} to ${order.customerInfo?.name || 'the customer'}'s wallet?`
+        );
+        if (!confirmCancel) return;
+
+        try {
+            const { data } = await apiClient.post(`/orders/${order._id}/cancel-refund`, {
+                reason: 'Product(s) out of stock',
+            });
+            alert(
+                `Order cancelled. ₹${data.refundAmount} credited to the customer's wallet. New wallet balance: ₹${data.walletBalance}.`
+            );
+            setRefreshFlag(prev => !prev);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to cancel & refund.');
+            console.error(err);
+        }
+    };
+
     if (loading) return <div className="text-center mt-10">Loading admin dashboard...</div>;
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
@@ -193,7 +216,10 @@ const AdminDashboard = () => {
                                             ))}
                                         </div>
                                     </div>
-                                    <button onClick={() => handleAssignClick(order)} className="w-full md:w-auto bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors shadow-md">Assign</button>
+                                    <div className="flex flex-wrap gap-2 w-full md:justify-end">
+                                        <button onClick={() => handleAssignClick(order)} className="flex-1 md:flex-none bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors shadow-md">Assign</button>
+                                        <button onClick={() => handleCancelRefund(order)} className="flex-1 md:flex-none bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm">Cancel &amp; Refund to Wallet</button>
+                                    </div>
                                 </div>
                             </div>
                         )) : <p>No unassigned orders found.</p>}
@@ -243,7 +269,7 @@ const AdminDashboard = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full md:justify-end">
                                         <button onClick={() => handleAdminStatusChange(order._id, 'delivered')} className="flex-1 md:flex-none bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm">Complete</button>
-                                        <button onClick={() => handleAdminStatusChange(order._id, 'cancelled')} className="flex-1 md:flex-none bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm">Cancel</button>
+                                        <button onClick={() => handleCancelRefund(order)} className="flex-1 md:flex-none bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm">Cancel &amp; Refund to Wallet</button>
                                         <button onClick={() => handleAssignClick(order)} className="flex-1 md:flex-none bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors shadow-sm">Reassign</button>
                                     </div>
                                 </div>

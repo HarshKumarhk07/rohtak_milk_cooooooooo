@@ -353,11 +353,12 @@
 // export default MyOrdersPage;
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 
 import moment from 'moment';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { FaBox, FaTruck, FaUndo, FaExchangeAlt, FaTimesCircle, FaCheckCircle, FaSpinner, FaClock } from 'react-icons/fa';
+import { FaBox, FaTruck, FaUndo, FaExchangeAlt, FaTimesCircle, FaCheckCircle, FaSpinner, FaClock, FaWallet } from 'react-icons/fa';
 import { resolveProductImage } from '../utils/dairyImageResolver';
 
 const MyOrdersPage = () => {
@@ -580,6 +581,31 @@ const MyOrdersPage = () => {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Cancellation & wallet refund details */}
+                                {order.status === 'cancelled' && (
+                                    <div className="mb-6 bg-red-50 border border-red-100 rounded-lg p-4">
+                                        <p className="font-bold text-red-700 flex items-center gap-2">
+                                            <FaTimesCircle /> Cancelled by Admin
+                                        </p>
+                                        {order.walletRefunded ? (
+                                            <div className="mt-2 text-sm text-gray-700 space-y-1">
+                                                <p className="flex items-center gap-2 text-green-700 font-semibold">
+                                                    <FaWallet /> Refund Credited to Wallet
+                                                </p>
+                                                <p><span className="font-semibold">Refund Amount:</span> ₹{order.refundAmount}</p>
+                                                {order.refundedAt && (
+                                                    <p><span className="font-semibold">Refund Date:</span> {moment(order.refundedAt).format('MMMM Do YYYY, h:mm a')}</p>
+                                                )}
+                                                <Link to="/wallet" className="inline-block mt-1 text-green-700 font-semibold hover:underline">
+                                                    View Wallet →
+                                                </Link>
+                                            </div>
+                                        ) : (
+                                            <p className="mt-2 text-sm text-gray-600">This order was cancelled.</p>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Order Items */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 border-t pt-6">

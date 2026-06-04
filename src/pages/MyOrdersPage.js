@@ -582,6 +582,18 @@ const MyOrdersPage = () => {
                                     </div>
                                 </div>
 
+                                {/* Hybrid / wallet payment breakdown */}
+                                {order.isPaid && order.walletAmountUsed > 0 && (
+                                    <div className="mb-4 text-sm bg-gray-50 rounded-lg p-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                        <span className="font-semibold text-gray-700">Payment Breakdown:</span>
+                                        <span className="text-gray-600">Wallet Used: <span className="font-semibold text-green-700">₹{order.walletAmountUsed}</span></span>
+                                        {order.razorpayAmount > 0 && (
+                                            <span className="text-gray-600">Paid via Razorpay: <span className="font-semibold">₹{order.razorpayPaid || order.razorpayAmount}</span></span>
+                                        )}
+                                        <span className="text-gray-800 font-bold">Final Amount Paid: ₹{order.totalPrice}</span>
+                                    </div>
+                                )}
+
                                 {/* Cancellation & wallet refund details */}
                                 {order.status === 'cancelled' && (
                                     <div className="mb-6 bg-red-50 border border-red-100 rounded-lg p-4">
@@ -638,6 +650,19 @@ const MyOrdersPage = () => {
                                                         </p>
                                                         <p className="text-sm text-gray-500">Qty: {item.qty} | Pack: {item.size}</p>
                                                         <p className="text-lg font-bold text-indigo-500">₹{item.price}</p>
+                                                        {(() => {
+                                                            const st = item.status || 'CONFIRMED';
+                                                            if (st === 'OUT_OF_STOCK') {
+                                                                return (
+                                                                    <p className="text-xs font-bold text-red-600 mt-1">
+                                                                        Out of Stock{item.refundAmount ? ` (Refunded ₹${item.refundAmount})` : ''}
+                                                                    </p>
+                                                                );
+                                                            }
+                                                            if (st === 'DELIVERED') return <p className="text-xs font-bold text-green-600 mt-1">Delivered</p>;
+                                                            if (st === 'CANCELLED') return <p className="text-xs font-bold text-gray-500 mt-1">Cancelled</p>;
+                                                            return <p className="text-xs font-bold text-green-600 mt-1">Confirmed</p>;
+                                                        })()}
                                                     </div>
                                                 </div>
 
@@ -716,6 +741,19 @@ const MyOrdersPage = () => {
                                         )}
                                     </div>
                                 )} */}
+
+                                {/* Partial (item-level) wallet refund summary */}
+                                {order.refundAmount > 0 && order.status !== 'cancelled' && (
+                                    <div className="mt-6 bg-green-50 border border-green-100 rounded-lg p-4 flex items-center gap-2">
+                                        <FaWallet className="text-green-600" />
+                                        <p className="text-sm font-semibold text-green-700">
+                                            Wallet Refund: ₹{order.refundAmount} Credited
+                                        </p>
+                                        <Link to="/wallet" className="ml-auto text-green-700 text-sm font-semibold hover:underline">
+                                            View Wallet →
+                                        </Link>
+                                    </div>
+                                )}
 
                                 {/* General buttons removed since we now have item-level buttons */}
                             </div>

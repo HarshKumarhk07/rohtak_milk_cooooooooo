@@ -26,5 +26,9 @@ router.post('/revert-status', protect, admin, orderController.revertOrderStatus)
 // so a user cannot cancel/refund even by calling the API directly.
 router.post('/:id/cancel-refund', protect, admin, orderController.adminCancelAndRefund);
 
+// Admin-only: mark specific item(s) in an order as out of stock and refund just
+// those items to the customer's wallet. Remaining items continue to delivery.
+router.post('/:id/items-out-of-stock', protect, admin, orderController.adminMarkItemsOutOfStock);
+
 
 module.exports = router;

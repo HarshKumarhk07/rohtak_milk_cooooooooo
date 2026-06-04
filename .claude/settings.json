@@ -59,7 +59,8 @@
       "Bash(node -e \"require\\('dotenv'\\).config\\({quiet:true}\\); require\\('./app.js'\\); console.log\\('Backend OK after refund-guard edit'\\);\")",
       "Bash(node -e \"const r=require\\('./package.json'\\); console.log\\('ROOT scripts:', JSON.stringify\\(r.scripts,null,1\\)\\)\")",
       "Bash(node -e \"const s=require\\('./server/package.json'\\); console.log\\('SERVER scripts:', JSON.stringify\\(s.scripts,null,1\\)\\)\")",
-      "Bash(node testBrevoEmail.js)"
+      "Bash(node testBrevoEmail.js)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\({quiet:true}\\); require\\('./app.js'\\); console.log\\('Backend OK'\\);\")"
     ]
   }
 }

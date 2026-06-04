@@ -45,7 +45,8 @@ const CartPage = () => {
     const [modalAddressText, setModalAddressText] = useState("");
     const [orderStatus, setOrderStatus] = useState({ isOpen: true, reason: '' });
     const [walletBalance, setWalletBalance] = useState(0);
-    const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // 'Razorpay' | 'Wallet'
+    const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // gateway: 'Razorpay' | 'COD'
+    const [useWallet, setUseWallet] = useState(false); // apply wallet balance first
     const alertShown = useRef(false);
 
     // Load the user's wallet balance so we can offer wallet / hybrid payment.
@@ -204,7 +205,11 @@ const CartPage = () => {
                 customerInfo,
                 shippingAddress,
                 customerLocation,
-                paymentMethod, // 'Razorpay' or 'Wallet' (server resolves Hybrid)
+                // When "Use Wallet Balance" is checked on an online order we send
+                // 'Hybrid'; the server applies the wallet first and charges only
+                // the remainder via Razorpay. If the wallet covers the whole
+                // total it auto-resolves to a wallet-only (instant) payment.
+                paymentMethod: (paymentMethod === 'Razorpay' && useWallet) ? 'Hybrid' : paymentMethod,
             };
 
             const config = {
@@ -215,11 +220,13 @@ const CartPage = () => {
             };
 
             const orderResponse = await apiClient.post('/orders', orderData, config);
-            const { createdOrder, razorpayOrder, walletPaid } = orderResponse.data;
+            const { createdOrder, razorpayOrder, walletPaid, codPlaced } = orderResponse.data;
 
-            // Order fully paid from the wallet — no payment gateway step needed.
-            if (walletPaid || !razorpayOrder) {
-                alert("Payment successful via wallet! Your order has been placed.");
+            // No online payment needed: fully paid by wallet, or Cash on Delivery.
+            if (walletPaid || codPlaced || !razorpayOrder) {
+                alert(codPlaced
+                    ? "Order placed! You can pay cash on delivery."
+                    : "Payment successful via wallet! Your order has been placed.");
                 clearCart();
                 navigate('/myorders');
                 return;
@@ -273,7 +280,7 @@ const CartPage = () => {
                     <h2 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h2>
                     <p className="text-gray-500 mb-8">Looks like you haven't added anything to your cart yet.</p>
                     <Link
-                        to="/shop"
+                        to="/products"
                         className="inline-block bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-700 transition duration-300 shadow-lg"
                     >
                         Start Shopping
@@ -595,24 +602,46 @@ const CartPage = () => {
                                             <span className="text-sm font-medium text-gray-800">Pay Online (Razorpay)</span>
                                         </label>
 
-                                        <label className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${walletBalance <= 0 ? 'opacity-50 cursor-not-allowed border-gray-200' : paymentMethod === 'Wallet' ? 'border-green-500 bg-green-50 cursor-pointer' : 'border-gray-200 hover:bg-gray-50 cursor-pointer'}`}>
+                                        <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                                             <input
                                                 type="radio"
                                                 name="paymentMethod"
-                                                value="Wallet"
-                                                disabled={walletBalance <= 0}
-                                                checked={paymentMethod === 'Wallet'}
-                                                onChange={() => setPaymentMethod('Wallet')}
+                                                value="COD"
+                                                checked={paymentMethod === 'COD'}
+                                                onChange={() => setPaymentMethod('COD')}
                                                 className="accent-green-600"
                                             />
-                                            <span className="flex-1 text-sm font-medium text-gray-800">Pay with Wallet</span>
-                                            <span className="text-sm font-bold text-green-700">₹{walletBalance}</span>
+                                            <span className="text-sm font-medium text-gray-800">Cash on Delivery</span>
                                         </label>
 
-                                        {paymentMethod === 'Wallet' && walletBalance < getTotalPrice() && walletBalance > 0 && (
-                                            <p className="text-xs text-gray-500 px-1">
-                                                ₹{walletBalance} will be used from your wallet and the remaining ₹{(getTotalPrice() - walletBalance).toFixed(2)} will be charged via Razorpay.
-                                            </p>
+                                        {/* Use Wallet Balance — applies the wallet first; any remainder is
+                                            charged via Razorpay. Only available for online payment. */}
+                                        {walletBalance > 0 && paymentMethod === 'Razorpay' && (
+                                            <>
+                                                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${useWallet ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={useWallet}
+                                                        onChange={(e) => setUseWallet(e.target.checked)}
+                                                        className="accent-green-600 w-4 h-4"
+                                                    />
+                                                    <span className="flex-1 text-sm font-medium text-gray-800">Use Wallet Balance</span>
+                                                    <span className="text-sm font-bold text-green-700">₹{walletBalance} Available</span>
+                                                </label>
+
+                                                {useWallet && (() => {
+                                                    const total = getTotalPrice();
+                                                    const walletContribution = Math.min(walletBalance, total);
+                                                    const amountToPay = Math.max(0, total - walletContribution);
+                                                    return (
+                                                        <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-sm space-y-1.5">
+                                                            <div className="flex justify-between"><span className="text-gray-600">Order Total</span><span className="font-semibold">₹{total.toFixed(2)}</span></div>
+                                                            <div className="flex justify-between"><span className="text-gray-600">Wallet Contribution</span><span className="font-semibold text-green-700">− ₹{walletContribution.toFixed(2)}</span></div>
+                                                            <div className="flex justify-between border-t border-gray-200 pt-1.5"><span className="text-gray-800 font-semibold">Amount To Pay {amountToPay > 0 ? '(Razorpay)' : ''}</span><span className="font-bold text-gray-900">₹{amountToPay.toFixed(2)}</span></div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </>
                                         )}
                                     </div>
 
@@ -637,9 +666,13 @@ const CartPage = () => {
                                         )}
                                     </button>
                                     <p className="text-center text-xs text-gray-400 mt-4">
-                                        {paymentMethod === 'Wallet' && walletBalance >= getTotalPrice()
-                                            ? 'Paid securely from your Rohtak Milk Company wallet'
-                                            : 'Secure Payment via Razorpay'}
+                                        {paymentMethod === 'COD'
+                                            ? 'Pay cash when your order is delivered'
+                                            : useWallet && walletBalance >= getTotalPrice()
+                                                ? 'Paid securely from your Rohtak Milk Company wallet'
+                                                : useWallet
+                                                    ? 'Wallet + Secure Payment via Razorpay'
+                                                    : 'Secure Payment via Razorpay'}
                                     </p>
                                 </div>
                             </div>

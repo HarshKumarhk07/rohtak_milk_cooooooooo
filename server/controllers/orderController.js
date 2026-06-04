@@ -11,9 +11,10 @@ const razorpayInstance = require('../config/razorpay');
 const User = require('../models/User');
 const Delivery = require('../models/Delivery');
 const walletService = require('../services/walletService');
-const { sendOrderCancelledEmail } = require('../services/emailService');
+const { sendOrderCancelledEmail, sendItemsUnavailableEmail } = require('../services/emailService');
 
 const REFUND_REASON = 'ORDER_CANCELLATION_REFUND';
+const ITEM_REFUND_REASON = 'ITEM_OUT_OF_STOCK_REFUND';
 
 exports.getOrderStatus = async (req, res) => {
   const currentTime = moment();
@@ -127,7 +128,13 @@ exports.createOrder = async (req, res) => {
     const method = paymentMethod || 'Razorpay';
     let walletAmountUsed = 0;
     let razorpayAmount = serverTotal;
-    if (method === 'Wallet' || method === 'Hybrid') {
+    let isCOD = false;
+
+    if (method === 'COD' || method === 'Cash on Delivery') {
+      // Cash on Delivery: nothing is charged online now.
+      isCOD = true;
+      razorpayAmount = 0;
+    } else if (method === 'Wallet' || method === 'Hybrid') {
       const balance = await walletService.getBalance(req.user._id);
       walletAmountUsed = walletService.round2(Math.min(balance, serverTotal));
       if (method === 'Wallet' && walletAmountUsed < serverTotal) {
@@ -136,8 +143,10 @@ exports.createOrder = async (req, res) => {
       razorpayAmount = walletService.round2(serverTotal - walletAmountUsed);
     }
 
-    const fullyPaidByWallet = walletAmountUsed > 0 && razorpayAmount <= 0;
-    const resolvedMethod = walletAmountUsed > 0 ? (razorpayAmount > 0 ? 'Hybrid' : 'Wallet') : 'Razorpay';
+    const fullyPaidByWallet = !isCOD && walletAmountUsed > 0 && razorpayAmount <= 0;
+    let resolvedMethod = 'Razorpay';
+    if (isCOD) resolvedMethod = 'COD';
+    else if (walletAmountUsed > 0) resolvedMethod = razorpayAmount > 0 ? 'Hybrid' : 'Wallet';
 
     // 3) Decrement stock now that the order has been fully validated.
     for (const u of stockUpdates) {
@@ -158,8 +167,15 @@ exports.createOrder = async (req, res) => {
         phone: customerInfo.phone
       },
       paymentMethod: resolvedMethod,
-      walletAmountUsed,
-      razorpayAmount,
+      walletAmountUsed,           // wallet amount RESERVED (intended)
+      razorpayAmount,             // remaining to charge via Razorpay
+      walletDebited: false,       // set true only once wallet is actually charged
+      razorpayPaid: 0,
+      paymentBreakdown: {
+        walletUsed: walletAmountUsed,
+        razorpayPaid: 0,
+        method: resolvedMethod,
+      },
       isPaid: fullyPaidByWallet,
       paidAt: fullyPaidByWallet ? Date.now() : undefined,
       paymentResult: fullyPaidByWallet
@@ -172,16 +188,22 @@ exports.createOrder = async (req, res) => {
 
     const createdOrder = await order.save();
 
-    // 4) Debit the wallet portion atomically. If it fails, restore stock and
-    //    remove the order so nothing is left in an inconsistent state.
-    if (walletAmountUsed > 0) {
+    // 4) WALLET-ONLY orders are charged immediately (there's no gateway step
+    //    that could fail). For HYBRID orders we DO NOT touch the wallet yet —
+    //    the reserved amount is only debited after Razorpay succeeds (see
+    //    verifyPayment), so a failed/abandoned payment never costs the customer.
+    if (fullyPaidByWallet) {
       try {
         await walletService.debitWallet({
           userId: req.user._id,
           orderId: createdOrder._id,
           amount: walletAmountUsed,
-          reason: razorpayAmount > 0 ? 'ORDER_PAYMENT_PARTIAL' : 'ORDER_PAYMENT',
+          reason: `Wallet payment for Order ${createdOrder.orderNumber}`,
         });
+        createdOrder.walletDebited = true;
+        createdOrder.razorpayPaid = 0;
+        createdOrder.paymentBreakdown = { walletUsed: walletAmountUsed, razorpayPaid: 0, method: 'Wallet' };
+        await createdOrder.save();
       } catch (debitErr) {
         for (const u of stockUpdates) {
           u.variant.countInStock += u.qty;
@@ -219,6 +241,7 @@ exports.createOrder = async (req, res) => {
       createdOrder,
       razorpayOrder,
       walletPaid: fullyPaidByWallet,
+      codPlaced: isCOD,
       walletAmountUsed,
       razorpayAmount,
     });
@@ -368,24 +391,80 @@ exports.verifyPayment = async (req, res) => {
   shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
   const digest = shasum.digest('hex');
 
-  if (digest === razorpay_signature) {
-    // Payment is successful, update the order
+  if (digest !== razorpay_signature) {
+    return res.status(400).json({ message: 'Invalid signature' });
+  }
+
+  try {
     const order = await Order.findById(req.params.id);
-    if (order) {
-      order.isPaid = true;
-      order.paidAt = Date.now();
-      order.paymentResult = {
-        id: razorpay_payment_id,
-        status: 'success',
-        update_time: Date.now()
-      };
-      await order.save();
-      res.json({ message: 'Payment successful', order });
-    } else {
-      res.status(404).json({ message: 'Order not found' });
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
     }
-  } else {
-    res.status(400).json({ message: 'Invalid signature' });
+
+    // Idempotent: if this order is already paid, don't debit again (guards
+    // against double payment submissions / duplicate verify calls).
+    if (order.isPaid) {
+      return res.json({ message: 'Payment already verified', order });
+    }
+
+    // HYBRID: now that Razorpay has succeeded, FINALIZE the wallet deduction.
+    // Atomically claim the debit on the order so two concurrent verify calls
+    // can never debit the wallet twice.
+    if (order.walletAmountUsed > 0) {
+      const claimed = await Order.findOneAndUpdate(
+        { _id: order._id, walletDebited: { $ne: true } },
+        { $set: { walletDebited: true } },
+        { new: true }
+      );
+
+      if (claimed) {
+        try {
+          await walletService.debitWallet({
+            userId: order.user,
+            orderId: order._id,
+            amount: order.walletAmountUsed,
+            reason: `Partial payment for Order ${order.orderNumber}`,
+          });
+        } catch (debitErr) {
+          // Wallet balance changed between checkout and now (e.g. spent on a
+          // concurrent order). Release the claim so it can be retried. The
+          // Razorpay amount captured was only the remainder, so we cannot
+          // complete this order — surface the problem.
+          await Order.updateOne({ _id: order._id }, { $set: { walletDebited: false } });
+          console.error('[Hybrid] Wallet finalize failed:', debitErr.message);
+          return res.status(400).json({
+            message: 'Wallet balance changed; order could not be completed. ' + debitErr.message,
+          });
+        }
+      }
+    }
+
+    // Mark the order paid (atomic update avoids overwriting walletDebited).
+    const paidOrder = await Order.findByIdAndUpdate(
+      order._id,
+      {
+        $set: {
+          isPaid: true,
+          paidAt: Date.now(),
+          razorpayPaid: order.razorpayAmount,
+          'paymentBreakdown.walletUsed': order.walletAmountUsed,
+          'paymentBreakdown.razorpayPaid': order.razorpayAmount,
+          'paymentBreakdown.method': order.paymentMethod,
+          paymentResult: {
+            id: razorpay_payment_id,
+            status: 'success',
+            update_time: String(Date.now()),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    console.log(`[Payment] Order ${paidOrder.orderNumber} paid. Wallet ₹${paidOrder.walletAmountUsed} + Razorpay ₹${paidOrder.razorpayAmount}.`);
+    res.json({ message: 'Payment successful', order: paidOrder });
+  } catch (error) {
+    console.error('Payment verification failed:', error);
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
 
@@ -394,8 +473,11 @@ exports.verifyPayment = async (req, res) => {
 // @access  Private
 exports.getMyOrders = async (req, res) => {
   try {
-    // Only show paid orders in My Orders as per user request
-    const orders = await Order.find({ user: req.user._id, isPaid: true }).populate('orderItems.product', 'name images').sort({ createdAt: -1 });
+    // Show paid orders, plus Cash-on-Delivery orders (which are paid on delivery).
+    const orders = await Order.find({
+      user: req.user._id,
+      $or: [{ isPaid: true }, { paymentMethod: 'COD' }],
+    }).populate('orderItems.product', 'name images').sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.error(error);
@@ -434,13 +516,12 @@ exports.revertOrderStatus = async (req, res) => {
 exports.getUnassignedOrders = async (req, res) => {
   try {
     const unassignedOrders = await Order.find({
-      $or: [
-        { assignedTo: { $exists: false } },
-        { assignedTo: null }
+      $and: [
+        { $or: [{ assignedTo: { $exists: false } }, { assignedTo: null }] },
+        { $or: [{ isPaid: true }, { paymentMethod: 'COD' }] },
       ],
       isDelivered: false,
       isCancelled: false,
-      isPaid: true
     })
       .populate('user', 'email name')
       .populate({
@@ -462,7 +543,7 @@ exports.getAssignedOrders = async (req, res) => {
       assignedTo: { $ne: null },
       isDelivered: false,
       isCancelled: false,
-      isPaid: true
+      $or: [{ isPaid: true }, { paymentMethod: 'COD' }]
     })
       .populate('user', 'name email phone')
       .populate('assignedTo', 'name email')
@@ -532,18 +613,23 @@ exports.adminCancelAndRefund = async (req, res) => {
       return res.status(400).json({ message: 'This order has already been refunded to the wallet' });
     }
 
-    // Refund only what the customer actually paid (server-side amounts only):
+    // Refund only what the customer actually paid (server-side amounts only),
+    // NET of any item-level partial refunds already credited for this order:
     //  - fully paid order  -> refund the full total
     //  - hybrid/abandoned  -> refund the wallet portion that was charged
     //  - nothing paid      -> just cancel, never credit money that wasn't paid
-    let refundAmount = 0;
-    if (order.isPaid) {
-      refundAmount = walletService.round2(order.totalPrice);
-    } else if (order.walletAmountUsed > 0) {
-      refundAmount = walletService.round2(order.walletAmountUsed);
-    }
+    // Only money ACTUALLY captured can be refunded:
+    //  - paid order        -> the full total was captured (wallet + Razorpay)
+    //  - walletDebited only -> only the wallet portion was captured
+    //  - otherwise          -> nothing captured, refund 0
+    const paidBase = order.isPaid
+      ? walletService.round2(order.totalPrice)
+      : (order.walletDebited ? walletService.round2(order.walletAmountUsed) : 0);
+    const alreadyRefunded = walletService.round2(order.refundAmount || 0);
+    let refundAmount = walletService.round2(paidBase - alreadyRefunded); // net still owed
 
-    // Unpaid order: cancel without any wallet credit.
+    // Nothing left to refund (unpaid order, or already fully refunded via
+    // item-level refunds): just cancel, never credit money that wasn't paid.
     if (!Number.isFinite(refundAmount) || refundAmount <= 0) {
       const cancelledUnpaid = await Order.findOneAndUpdate(
         { _id: id, isCancelled: false, isDelivered: false },
@@ -551,6 +637,8 @@ exports.adminCancelAndRefund = async (req, res) => {
           $set: {
             status: 'cancelled',
             isCancelled: true,
+            walletRefunded: paidBase > 0,
+            refundStatus: paidBase > 0 ? 'FULL' : 'NONE',
             cancelledBy: req.user._id,
             cancelReason: reason || 'Product(s) out of stock',
           },
@@ -561,7 +649,9 @@ exports.adminCancelAndRefund = async (req, res) => {
         await Delivery.findOneAndUpdate({ order: order._id }, { status: 'cancelled' });
       } catch (_) { /* no-op */ }
       return res.status(200).json({
-        message: 'Order cancelled. No payment was made, so nothing was refunded.',
+        message: paidBase > 0
+          ? 'Order cancelled. It was already fully refunded.'
+          : 'Order cancelled. No payment was made, so nothing was refunded.',
         order: cancelledUnpaid || order,
         refundAmount: 0,
         walletBalance: order.user.walletBalance || 0,
@@ -578,7 +668,9 @@ exports.adminCancelAndRefund = async (req, res) => {
           isCancelled: true,
           isDelivered: false,
           walletRefunded: true,
-          refundAmount,
+          refundAmount: paidBase, // cumulative total refunded for the order
+          refundStatus: 'FULL',
+          refundReason: reason || 'Order cancelled by admin',
           refundedAt: new Date(),
           cancelledBy: req.user._id,
           cancelReason: reason || 'Product(s) out of stock',
@@ -606,7 +698,8 @@ exports.adminCancelAndRefund = async (req, res) => {
       await Order.findByIdAndUpdate(id, {
         $set: {
           walletRefunded: false,
-          refundAmount: 0,
+          refundAmount: alreadyRefunded,
+          refundStatus: alreadyRefunded > 0 ? 'PARTIAL' : 'NONE',
           refundedAt: null,
         },
       });
@@ -644,6 +737,163 @@ exports.adminCancelAndRefund = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin cancel & refund failed:', error);
+    return res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
+// @desc    Admin marks one or more ITEMS in an order as OUT_OF_STOCK and refunds
+//          just those items to the customer's wallet. Remaining items continue
+//          through delivery. Admin-only and idempotent per item.
+// @route   POST /api/orders/:id/items-out-of-stock
+// @access  Private/Admin
+exports.adminMarkItemsOutOfStock = async (req, res) => {
+  const { id } = req.params;
+  const { itemIds, reason } = req.body || {};
+
+  if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    return res.status(400).json({ message: 'No items specified' });
+  }
+
+  try {
+    const order = await Order.findById(id).populate('user', 'name email walletBalance');
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (!order.user) return res.status(400).json({ message: 'Order has no associated user' });
+    if (order.isDelivered) {
+      return res.status(400).json({ message: 'Delivered orders cannot be modified' });
+    }
+
+    // Refund money only if the customer actually paid (captured funds). For COD
+    // or not-yet-paid orders the item is simply marked unavailable and won't be
+    // charged. `walletDebited` reflects funds actually taken (not just reserved).
+    const customerHasPaid = order.isPaid || order.walletDebited;
+
+    const refundedNow = [];
+    let totalRefundedNow = 0;
+    const SKIP_STATUSES = ['OUT_OF_STOCK', 'CANCELLED', 'DELIVERED'];
+
+    for (const itemId of itemIds) {
+      const item = order.orderItems.id(itemId);
+      if (!item) continue;
+      if (item.refunded || SKIP_STATUSES.includes(item.status)) continue;
+
+      const itemRefund = walletService.round2(item.price * item.qty);
+
+      // Atomically CLAIM this specific item so it can never be refunded twice,
+      // even under concurrent requests.
+      const claimed = await Order.findOneAndUpdate(
+        {
+          _id: id,
+          orderItems: {
+            $elemMatch: {
+              _id: item._id,
+              refunded: { $ne: true },
+              status: { $nin: SKIP_STATUSES },
+            },
+          },
+        },
+        {
+          $set: {
+            'orderItems.$.status': 'OUT_OF_STOCK',
+            'orderItems.$.refunded': customerHasPaid,
+            'orderItems.$.refundAmount': customerHasPaid ? itemRefund : 0,
+          },
+        },
+        { new: true }
+      );
+      if (!claimed) continue; // already processed by a concurrent request
+
+      if (customerHasPaid) {
+        try {
+          await walletService.creditWallet({
+            userId: order.user._id,
+            orderId: order._id,
+            productId: item.product,
+            amount: itemRefund,
+            reason: ITEM_REFUND_REASON,
+          });
+          totalRefundedNow += itemRefund;
+        } catch (creditErr) {
+          // Roll back this item's claim so it can be retried.
+          await Order.updateOne(
+            { _id: id, 'orderItems._id': item._id },
+            { $set: { 'orderItems.$.refunded': false, 'orderItems.$.refundAmount': 0 } }
+          );
+          console.error('[OOS] Item wallet credit failed, rolled back item:', creditErr.message);
+          continue;
+        }
+      }
+      refundedNow.push({
+        product: item.product,
+        productName: item.name,
+        quantity: item.qty,
+        refundAmount: customerHasPaid ? itemRefund : 0,
+      });
+    }
+
+    if (refundedNow.length === 0) {
+      return res.status(400).json({ message: 'No eligible items to mark out of stock (already processed).' });
+    }
+
+    // Recompute order-level refund totals/status from the items.
+    const fresh = await Order.findById(id).populate('user', 'name email walletBalance');
+    const items = fresh.orderItems;
+    const cumulativeRefund = walletService.round2(
+      items.reduce((sum, i) => sum + (i.refundAmount || 0), 0)
+    );
+    const everyItemUnavailable = items.every((i) =>
+      ['OUT_OF_STOCK', 'CANCELLED'].includes(i.status)
+    );
+
+    fresh.refundAmount = cumulativeRefund;
+    fresh.refundStatus = cumulativeRefund <= 0 ? 'NONE' : (everyItemUnavailable ? 'FULL' : 'PARTIAL');
+    fresh.refundReason = reason || 'Item(s) out of stock';
+    fresh.refundedItems = items
+      .filter((i) => (i.refundAmount || 0) > 0)
+      .map((i) => ({ product: i.product, productName: i.name, quantity: i.qty, refundAmount: i.refundAmount }));
+    fresh.refundedAt = new Date();
+
+    // If nothing is left to deliver, cancel the whole order.
+    if (everyItemUnavailable) {
+      fresh.status = 'cancelled';
+      fresh.isCancelled = true;
+      fresh.cancelledBy = req.user._id;
+      fresh.cancelReason = reason || 'All items out of stock';
+      if (cumulativeRefund > 0) fresh.walletRefunded = true;
+      try {
+        await Delivery.findOneAndUpdate({ order: fresh._id }, { status: 'cancelled' });
+      } catch (_) { /* no-op */ }
+    }
+    await fresh.save();
+
+    const walletBalance = await walletService.getBalance(order.user._id);
+
+    console.log(`[OOS] Order ${order.orderNumber}: ${refundedNow.length} item(s) marked out-of-stock by admin ${req.user._id}. Refunded ₹${totalRefundedNow}. Balance ₹${walletBalance}`);
+
+    // Email the customer (best-effort) only when money was actually refunded.
+    if (totalRefundedNow > 0) {
+      try {
+        await sendItemsUnavailableEmail({
+          to: order.user.email,
+          customerName: order.customerInfo?.name || order.user.name || 'Customer',
+          products: refundedNow
+            .filter((p) => p.refundAmount > 0)
+            .map((p) => ({ name: p.productName, quantity: p.quantity, refundAmount: p.refundAmount })),
+          refundAmount: walletService.round2(totalRefundedNow),
+          walletBalance,
+        });
+      } catch (mailErr) {
+        console.error('[OOS] Unavailable-items email failed (refund still succeeded):', mailErr.message);
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Item(s) marked out of stock',
+      refundedAmount: walletService.round2(totalRefundedNow),
+      walletBalance,
+      order: fresh,
+    });
+  } catch (error) {
+    console.error('Mark items out of stock failed:', error);
     return res.status(500).json({ message: error.message || 'Server Error' });
   }
 };

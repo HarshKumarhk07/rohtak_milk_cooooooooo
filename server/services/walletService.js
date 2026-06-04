@@ -13,7 +13,7 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
  * Credit the user's wallet and log a CREDIT transaction.
  * Balance is incremented atomically with $inc.
  */
-async function creditWallet({ userId, orderId, amount, reason }) {
+async function creditWallet({ userId, orderId, productId, amount, reason }) {
   const value = round2(amount);
   if (!Number.isFinite(value) || value <= 0) {
     throw new Error('Wallet credit amount must be a positive number');
@@ -30,6 +30,7 @@ async function creditWallet({ userId, orderId, amount, reason }) {
   const txn = await WalletTransaction.create({
     user: userId,
     order: orderId,
+    product: productId,
     amount: value,
     type: 'CREDIT',
     reason,
@@ -45,7 +46,7 @@ async function creditWallet({ userId, orderId, amount, reason }) {
  * Uses a conditional atomic update so the balance can never go negative even
  * under concurrent requests (the update only matches when balance >= amount).
  */
-async function debitWallet({ userId, orderId, amount, reason }) {
+async function debitWallet({ userId, orderId, productId, amount, reason }) {
   const value = round2(amount);
   if (!Number.isFinite(value) || value <= 0) {
     throw new Error('Wallet debit amount must be a positive number');
@@ -64,6 +65,7 @@ async function debitWallet({ userId, orderId, amount, reason }) {
   const txn = await WalletTransaction.create({
     user: userId,
     order: orderId,
+    product: productId,
     amount: value,
     type: 'DEBIT',
     reason,
@@ -86,7 +88,8 @@ async function getWalletSummary(userId) {
     User.findById(userId).select('walletBalance'),
     WalletTransaction.find({ user: userId })
       .sort({ createdAt: -1 })
-      .populate('order', 'orderNumber totalPrice status'),
+      .populate('order', 'orderNumber totalPrice status')
+      .populate('product', 'name'),
   ]);
 
   const totalCredits = transactions

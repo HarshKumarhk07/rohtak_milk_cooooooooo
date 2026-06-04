@@ -7,11 +7,13 @@ import { FaWallet, FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 const REASON_LABELS = {
   ORDER_CANCELLATION_REFUND: "Refund — Order Cancelled",
+  ITEM_OUT_OF_STOCK_REFUND: "Refund — Item Out of Stock",
   ORDER_PAYMENT: "Order Payment",
   ORDER_PAYMENT_PARTIAL: "Order Payment (Partial)",
 };
 
 const formatReason = (reason) => REASON_LABELS[reason] || reason;
+const isRefund = (txn) => txn.type === "CREDIT" && /REFUND/i.test(txn.reason);
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState(null);
@@ -63,6 +65,37 @@ const WalletPage = () => {
           <p className="text-2xl font-extrabold text-red-600 mt-1">₹{totalDebits}</p>
         </div>
       </div>
+
+      {/* Refund history */}
+      {transactions.some(isRefund) && (
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">Refund History</h2>
+          <div className="divide-y divide-gray-100">
+            {transactions.filter(isRefund).map((txn) => (
+              <div key={txn._id} className="flex items-center justify-between py-3 gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-800 text-sm md:text-base truncate">
+                    {formatReason(txn.reason)}
+                    {txn.product?.name ? ` · ${txn.product.name}` : ""}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {moment(txn.createdAt).format("MMM Do YYYY, h:mm a")}
+                    {txn.order?.orderNumber && (
+                      <>
+                        {" · "}
+                        <Link to="/myorders" className="text-green-600 hover:underline">
+                          #{txn.order.orderNumber}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <p className="font-extrabold text-green-600 flex-shrink-0">+₹{txn.amount}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transaction history */}
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-4 md:p-6">

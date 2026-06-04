@@ -8,6 +8,9 @@ const mongoose = require('mongoose');
 const walletTransactionSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+    // Optional — set for item-level (partial) refunds so the history can show
+    // exactly which product was refunded.
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     amount: { type: Number, required: true, min: 0 },
     type: { type: String, enum: ['CREDIT', 'DEBIT'], required: true },
     reason: { type: String, required: true },

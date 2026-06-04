@@ -151,6 +151,79 @@ const AdminDashboard = () => {
         }
     };
 
+    // Per-order selection of items to mark out of stock: { [orderId]: [itemId] }
+    const [oosSelection, setOosSelection] = useState({});
+
+    const itemIsMarkable = (item) => {
+        const s = item.status || 'CONFIRMED';
+        return !['OUT_OF_STOCK', 'CANCELLED', 'DELIVERED'].includes(s);
+    };
+    const orderHasMarkableItems = (order) => (order.orderItems || []).some(itemIsMarkable);
+
+    const toggleOosItem = (orderId, itemId) => {
+        setOosSelection((prev) => {
+            const current = prev[orderId] || [];
+            const next = current.includes(itemId)
+                ? current.filter((id) => id !== itemId)
+                : [...current, itemId];
+            return { ...prev, [orderId]: next };
+        });
+    };
+
+    // Confirmation modal state for marking items out of stock.
+    const [oosModal, setOosModal] = useState(null); // { order, itemIds, items }
+    const [oosSubmitting, setOosSubmitting] = useState(false);
+    const [oosResult, setOosResult] = useState(null); // { success, count, refunded, balance, message }
+
+    // Format "2 × 1L = 2L" by parsing the number+unit out of the pack size.
+    const formatItemQty = (item) => {
+        const match = String(item.size || '').match(/([\d.]+)\s*(ml|l|kg|g)/i);
+        if (match) {
+            const total = parseFloat(match[1]) * item.qty;
+            return `${item.qty} × ${item.size} = ${Number(total.toFixed(2))}${match[2]}`;
+        }
+        return `Qty: ${item.qty} × ${item.size}`;
+    };
+
+    // Open the confirmation modal for the SELECTED items.
+    const requestMarkOutOfStock = (order, itemIds) => {
+        if (!itemIds || itemIds.length === 0) return;
+        const items = order.orderItems.filter((i) => itemIds.includes(i._id));
+        setOosModal({ order, itemIds, items });
+    };
+
+    // Admin-only: mark the SELECTED item(s) out of stock in one request. Refunds
+    // just those items to the customer's wallet (one combined email is sent);
+    // the rest of the order continues to delivery.
+    const confirmMarkOutOfStock = async () => {
+        if (!oosModal) return;
+        const { order, itemIds } = oosModal;
+        setOosSubmitting(true);
+        try {
+            const { data } = await apiClient.post(`/orders/${order._id}/items-out-of-stock`, {
+                itemIds,
+            });
+            setOosSelection((prev) => ({ ...prev, [order._id]: [] }));
+            setOosModal(null);
+            setOosResult({
+                success: true,
+                count: itemIds.length,
+                refunded: data.refundedAmount,
+                balance: data.walletBalance,
+            });
+            setRefreshFlag(prev => !prev);
+        } catch (err) {
+            setOosModal(null);
+            setOosResult({
+                success: false,
+                message: err.response?.data?.message || 'Failed to mark items out of stock.',
+            });
+            console.error(err);
+        } finally {
+            setOosSubmitting(false);
+        }
+    };
+
     if (loading) return <div className="text-center mt-10">Loading admin dashboard...</div>;
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
@@ -204,16 +277,52 @@ const AdminDashboard = () => {
                                     <div className="w-full flex flex-col items-start md:items-end">
                                         <p className="font-semibold text-sm md:text-base">Products:</p>
                                         <div className="w-full space-y-2 mt-2">
-                                            {order.orderItems.map((item) => (
-                                                <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
-                                                    <img
-                                                        src={resolveProductImage(item.product, 0)}
-                                                        alt={item.name}
-                                                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
-                                                    />
-                                                    <p className="text-xs md:text-sm font-medium">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
-                                                </div>
-                                            ))}
+                                            {order.orderItems.map((item) => {
+                                                const itemStatus = item.status || 'CONFIRMED';
+                                                const isOOS = itemStatus === 'OUT_OF_STOCK';
+                                                const canMark = !isOOS && itemStatus !== 'CANCELLED' && itemStatus !== 'DELIVERED';
+                                                return (
+                                                    <div key={item._id} className="flex items-center justify-between gap-2 bg-gray-50 p-2 rounded-md">
+                                                        <div className="flex items-center space-x-3 min-w-0">
+                                                            <img
+                                                                src={resolveProductImage(item.product, 0)}
+                                                                alt={item.name}
+                                                                className="w-12 h-12 md:w-14 md:h-14 object-cover rounded shadow-sm flex-shrink-0"
+                                                            />
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs md:text-sm font-medium truncate">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
+                                                                <p className="text-[11px] text-gray-500">Qty: {item.qty} · ₹{item.price}</p>
+                                                                {isOOS ? (
+                                                                    <span className="inline-block text-[10px] font-bold text-red-600">Out of Stock{item.refundAmount ? ` · Refunded ₹${item.refundAmount}` : ''}</span>
+                                                                ) : (
+                                                                    <span className="inline-block text-[10px] font-bold text-green-600 capitalize">{itemStatus.toLowerCase()}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {canMark && (
+                                                            <label className="flex-shrink-0 flex items-center gap-1.5 text-[10px] md:text-xs text-orange-700 font-semibold cursor-pointer select-none">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(oosSelection[order._id] || []).includes(item._id)}
+                                                                    onChange={() => toggleOosItem(order._id, item._id)}
+                                                                    className="accent-orange-600 w-4 h-4"
+                                                                />
+                                                                Out of Stock
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                            {orderHasMarkableItems(order) && (
+                                                <button
+                                                    type="button"
+                                                    disabled={!((oosSelection[order._id] || []).length)}
+                                                    onClick={() => requestMarkOutOfStock(order, oosSelection[order._id] || [])}
+                                                    className="mt-2 w-full text-xs md:text-sm bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    Mark Selected Out of Stock{(oosSelection[order._id] || []).length ? ` (${oosSelection[order._id].length})` : ''}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full md:justify-end">
@@ -255,16 +364,52 @@ const AdminDashboard = () => {
                                     <div className="w-full flex flex-col items-start md:items-end">
                                         <p className="font-semibold text-sm md:text-base">Products:</p>
                                         <div className="w-full space-y-2 mt-2">
-                                            {order.orderItems.map((item) => (
-                                                <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
-                                                    <img
-                                                        src={resolveProductImage(item.product, 0)}
-                                                        alt={item.name}
-                                                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
-                                                    />
-                                                    <p className="text-xs md:text-sm font-medium">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
-                                                </div>
-                                            ))}
+                                            {order.orderItems.map((item) => {
+                                                const itemStatus = item.status || 'CONFIRMED';
+                                                const isOOS = itemStatus === 'OUT_OF_STOCK';
+                                                const canMark = !isOOS && itemStatus !== 'CANCELLED' && itemStatus !== 'DELIVERED';
+                                                return (
+                                                    <div key={item._id} className="flex items-center justify-between gap-2 bg-gray-50 p-2 rounded-md">
+                                                        <div className="flex items-center space-x-3 min-w-0">
+                                                            <img
+                                                                src={resolveProductImage(item.product, 0)}
+                                                                alt={item.name}
+                                                                className="w-12 h-12 md:w-14 md:h-14 object-cover rounded shadow-sm flex-shrink-0"
+                                                            />
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs md:text-sm font-medium truncate">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
+                                                                <p className="text-[11px] text-gray-500">Qty: {item.qty} · ₹{item.price}</p>
+                                                                {isOOS ? (
+                                                                    <span className="inline-block text-[10px] font-bold text-red-600">Out of Stock{item.refundAmount ? ` · Refunded ₹${item.refundAmount}` : ''}</span>
+                                                                ) : (
+                                                                    <span className="inline-block text-[10px] font-bold text-green-600 capitalize">{itemStatus.toLowerCase()}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {canMark && (
+                                                            <label className="flex-shrink-0 flex items-center gap-1.5 text-[10px] md:text-xs text-orange-700 font-semibold cursor-pointer select-none">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(oosSelection[order._id] || []).includes(item._id)}
+                                                                    onChange={() => toggleOosItem(order._id, item._id)}
+                                                                    className="accent-orange-600 w-4 h-4"
+                                                                />
+                                                                Out of Stock
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                            {orderHasMarkableItems(order) && (
+                                                <button
+                                                    type="button"
+                                                    disabled={!((oosSelection[order._id] || []).length)}
+                                                    onClick={() => requestMarkOutOfStock(order, oosSelection[order._id] || [])}
+                                                    className="mt-2 w-full text-xs md:text-sm bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    Mark Selected Out of Stock{(oosSelection[order._id] || []).length ? ` (${oosSelection[order._id].length})` : ''}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full md:justify-end">
@@ -315,6 +460,109 @@ const AdminDashboard = () => {
                             <button onClick={() => setShowAssignModal(false)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md">Cancel</button>
                             <button onClick={handleAssignOrder} className="bg-green-600 text-white px-4 py-2 rounded-md" disabled={!selectedPartner}>Confirm Assign</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Out-of-stock confirmation modal */}
+            {oosModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !oosSubmitting && setOosModal(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="bg-orange-50 border-b border-orange-100 px-6 py-4">
+                            <h3 className="text-lg font-bold text-orange-700">Mark Items Out of Stock</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                Order #{oosModal.order.orderNumber} · {oosModal.order.customerInfo?.name}
+                            </p>
+                        </div>
+
+                        <div className="px-6 py-4 max-h-72 overflow-y-auto divide-y divide-gray-100">
+                            {oosModal.items.map((item) => (
+                                <div key={item._id} className="flex items-center gap-3 py-2.5">
+                                    <img src={resolveProductImage(item.product, 0)} alt={item.name} className="w-11 h-11 object-cover rounded flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                                        <p className="text-xs text-gray-500">{formatItemQty(item)}</p>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900 flex-shrink-0">₹{(item.price * item.qty).toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-600">Total Refund</span>
+                            <span className="text-xl font-extrabold text-green-700">
+                                ₹{oosModal.items.reduce((sum, i) => sum + i.price * i.qty, 0).toFixed(2)}
+                            </span>
+                        </div>
+
+                        <p className="px-6 pt-3 text-xs text-gray-500">
+                            This amount will be credited to the customer's wallet. The remaining items will still be delivered.
+                        </p>
+
+                        <div className="px-6 py-4 flex gap-3">
+                            <button
+                                onClick={() => setOosModal(null)}
+                                disabled={oosSubmitting}
+                                className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmMarkOutOfStock}
+                                disabled={oosSubmitting}
+                                className="flex-1 py-2.5 rounded-lg bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-colors disabled:opacity-60"
+                            >
+                                {oosSubmitting ? 'Processing…' : 'Confirm & Refund'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Out-of-stock result modal (success / error) */}
+            {oosResult && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOosResult(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${oosResult.success ? 'bg-green-100' : 'bg-red-100'}`}>
+                            {oosResult.success ? (
+                                <svg className="w-9 h-9 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                                <svg className="w-9 h-9 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            )}
+                        </div>
+
+                        {oosResult.success ? (
+                            <>
+                                <h3 className="text-lg font-bold text-gray-900">Items Marked Out of Stock</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {oosResult.count} item(s) updated and refunded to the customer's wallet.
+                                </p>
+                                <div className="mt-4 bg-gray-50 rounded-xl p-4 space-y-2 text-left">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Refunded</span>
+                                        <span className="font-bold text-green-700">₹{oosResult.refunded}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
+                                        <span className="text-gray-500">Customer Wallet Balance</span>
+                                        <span className="font-bold text-gray-900">₹{oosResult.balance}</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="text-lg font-bold text-gray-900">Couldn't Mark Out of Stock</h3>
+                                <p className="text-sm text-gray-500 mt-1">{oosResult.message}</p>
+                            </>
+                        )}
+
+                        <button
+                            onClick={() => setOosResult(null)}
+                            className={`mt-6 w-full py-2.5 rounded-lg text-white font-semibold transition-colors ${oosResult.success ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-800'}`}
+                        >
+                            Done
+                        </button>
                     </div>
                 </div>
             )}

@@ -9,7 +9,17 @@ const orderSchema = new mongoose.Schema({
         qty: { type: Number, required: true },
         price: { type: Number, required: true },
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-        size: { type: String, required: true }
+        size: { type: String, required: true },
+        // Per-item lifecycle status. Existing orders (created before this field
+        // existed) read as undefined and are treated as CONFIRMED by the UI.
+        status: {
+            type: String,
+            enum: ['PENDING', 'CONFIRMED', 'OUT_OF_STOCK', 'DELIVERED', 'CANCELLED'],
+            default: 'CONFIRMED'
+        },
+        // Per-item refund guard — once true the item can never be refunded again.
+        refunded: { type: Boolean, default: false },
+        refundAmount: { type: Number, default: 0 }
     }],
     shippingAddress: {
         address: { type: String, required: true },
@@ -45,19 +55,40 @@ const orderSchema = new mongoose.Schema({
     deliveryWindowEnd: { type: Date },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
-    // ---- Wallet refund tracking (set when an admin cancels & refunds) ----
-    // `walletRefunded` is the single source of truth that guards against
-    // duplicate refunds — once true, the order can never be refunded again.
+    // ---- Wallet refund tracking ----
+    // `walletRefunded` guards a FULL order cancellation refund (once true the
+    // whole order can't be cancel-refunded again). Per-item out-of-stock
+    // refunds are guarded individually by orderItems[].refunded.
     walletRefunded: { type: Boolean, default: false },
-    refundAmount: { type: Number, default: 0 },
+    refundAmount: { type: Number, default: 0 }, // cumulative amount refunded
+    refundStatus: { type: String, enum: ['NONE', 'PARTIAL', 'FULL'], default: 'NONE' },
+    refundReason: { type: String },
+    refundedItems: [{
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        productName: { type: String },
+        quantity: { type: Number },
+        refundAmount: { type: Number }
+    }],
     refundedAt: { type: Date },
     cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     cancelReason: { type: String },
 
     // ---- Wallet / hybrid payment tracking (set at checkout) ----
-    // How much of this order was paid from the customer's wallet vs Razorpay.
+    // walletAmountUsed  = wallet amount RESERVED for this order (intended).
+    // razorpayAmount    = remaining amount to be charged via Razorpay.
+    // walletDebited     = becomes true ONLY once the wallet is actually charged
+    //                     (immediately for wallet-only; after Razorpay success
+    //                     for hybrid). Guards against double deductions.
+    // razorpayPaid      = amount actually captured via Razorpay (set on verify).
     walletAmountUsed: { type: Number, default: 0 },
-    razorpayAmount: { type: Number, default: 0 }
+    razorpayAmount: { type: Number, default: 0 },
+    walletDebited: { type: Boolean, default: false },
+    razorpayPaid: { type: Number, default: 0 },
+    paymentBreakdown: {
+        walletUsed: { type: Number, default: 0 },
+        razorpayPaid: { type: Number, default: 0 },
+        method: { type: String }
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

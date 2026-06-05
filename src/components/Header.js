@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import apiClient from "../services/apiClient";
 import { resolveCategoryImage } from "../utils/dairyImageResolver";
+import AnnouncementBanner from "./AnnouncementBanner";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -237,6 +238,7 @@ const Header = () => {
     { name: "New Release", path: "/products/recent" },
     { name: "Best Seller", path: "/products/bestseller" },
     { name: "Shop All", path: "/products" },
+    { name: "Subscribe & Save", path: "/subscribe" },
     { name: "Blog", path: "/blog" },
     { name: "About Us", path: "/about" },
     { name: "Contact", path: "/contact" },
@@ -254,15 +256,8 @@ const Header = () => {
         }`}
       role="banner"
     >
-      {/* Promo bar */}
-      <div className="bg-green-600 text-white py-1.5 px-2 text-[9px] md:text-xs font-bold tracking-widest uppercase overflow-hidden relative">
-        <div className="flex animate-marquee whitespace-nowrap min-w-max">
-          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
-          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
-          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
-          <span className="px-4">Fresh milk delivered to your doorstep. Subscribe for daily delivery — 20% off your first order!</span>
-        </div>
-      </div>
+      {/* Dynamic, admin-managed rotating announcement bar */}
+      <AnnouncementBanner />
 
       {/* Coming Soon static banner */}
       <div className="bg-yellow-400 text-gray-900 py-0.5 px-2 text-center text-[8px] md:text-[10px] font-bold tracking-widest uppercase leading-tight">
@@ -270,14 +265,7 @@ const Header = () => {
       </div>
 
       <div className="mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 py-4">
-        {/* Logo */}
-        <Link
-          to="/"
-          className="flex items-center transition-all duration-300"
-          aria-label="Rohtak Milk Company Home"
-        >
-          <img src="/final_logo_image.png" alt="Rohtak Milk Company" className="h-[32px] w-[115px] md:h-[65px] md:w-[260px] object-contain mix-blend-multiply" />
-        </Link>
+        {/* Brand removed per request */}
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex flex-1 justify-center px-2">
@@ -338,32 +326,49 @@ const Header = () => {
           </form>
 
           {user ? (
-            <div className="flex items-center space-x-4">
-              <Link
-                to={user.role === "admin" ? "/admin" : user.role === "delivery" ? "/delivery" : "/myorders"}
-                className={`transition-colors ${isActive("/admin") || isActive("/delivery") || isActive("/myorders") ? "text-green-700 font-bold" : "text-gray-600 hover:text-green-800"}`}
+            // Account menu — collapses appointments/subscriptions/wallet/logout
+            // into a hover dropdown so the bar stays compact and cart/wishlist
+            // never overflow off-screen.
+            <div className="relative group">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-gray-600 hover:text-green-800 transition-colors"
                 title="Account"
               >
                 <HiOutlineUser className="w-6 h-6" />
-              </Link>
-              <Link
-                to="/my-appointments"
-                className={`transition-colors text-sm font-medium ${isActive("/my-appointments") ? "text-green-700 font-bold" : "text-gray-600 hover:text-green-800"}`}
-              >
-                Your Appointment
-              </Link>
-              <Link
-                to="/wallet"
-                className={`transition-colors text-sm font-medium ${isActive("/wallet") ? "text-green-700 font-bold" : "text-gray-600 hover:text-green-800"}`}
-              >
-                Wallet
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-green-800 transition-colors text-sm font-medium"
-              >
-                Logout
+                <span className="text-sm font-medium hidden lg:inline">Account</span>
               </button>
+
+              {/* pt-2 forms a hover bridge so the menu doesn't close on the gap */}
+              <div className="absolute right-0 top-full pt-2 hidden group-hover:block z-50">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 w-52">
+                  <Link
+                    to={user.role === "admin" ? "/admin" : user.role === "delivery" ? "/delivery" : "/myorders"}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800"
+                  >
+                    {user.role === "admin" ? "Admin Dashboard" : user.role === "delivery" ? "Delivery Dashboard" : "My Orders"}
+                  </Link>
+                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                    My Profile
+                  </Link>
+                  <Link to="/my-subscriptions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                    My Subscriptions
+                  </Link>
+                  <Link to="/my-appointments" className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                    Your Appointment
+                  </Link>
+                  <Link to="/wallet" className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                    Wallet
+                  </Link>
+                  <div className="my-1 border-t border-gray-100" />
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <Link to="/login" className={`transition-all duration-300 font-bold px-4 py-1.5 rounded-full ${isActive("/login") ? "bg-green-600 text-white shadow-md shadow-green-200" : "text-gray-600 hover:text-green-800 hover:bg-green-50"}`}>
@@ -574,6 +579,12 @@ const Header = () => {
                   </Link>
                   <Link to="/wallet" onClick={toggleMenu} className={`flex items-center p-2 rounded-lg transition-all ${isActive("/wallet") ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-white"}`}>
                     <span className="text-sm font-medium">My Wallet</span>
+                  </Link>
+                  <Link to="/my-subscriptions" onClick={toggleMenu} className={`flex items-center p-2 rounded-lg transition-all ${isActive("/my-subscriptions") ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-white"}`}>
+                    <span className="text-sm font-medium">My Subscriptions</span>
+                  </Link>
+                  <Link to="/profile" onClick={toggleMenu} className={`flex items-center p-2 rounded-lg transition-all ${isActive("/profile") ? "bg-green-100 text-green-800" : "text-gray-700 hover:bg-white"}`}>
+                    <span className="text-sm font-medium">My Profile</span>
                   </Link>
                 </div>
                 <div className="space-y-3">

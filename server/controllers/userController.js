@@ -1,6 +1,49 @@
 // src/controllers/userController.js
 const User = require('../models/User');
 
+// @desc    Get the logged-in user's profile
+// @route   GET /api/users/me
+// @access  Private
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    console.error('getMe failed:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// @desc    Update the logged-in user's profile (name, phone, default address)
+// @route   PUT /api/users/me
+// @access  Private
+exports.updateMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { name, phone, address } = req.body;
+    if (name !== undefined) user.name = String(name).trim();
+    if (phone !== undefined) user.phone = String(phone).trim();
+    if (address !== undefined) {
+      user.address = {
+        address: String(address.address || '').trim(),
+        city: String(address.city || '').trim(),
+        postalCode: String(address.postalCode || '').trim(),
+      };
+    }
+
+    await user.save();
+    const safe = user.toObject();
+    delete safe.password;
+    res.json({ message: 'Profile updated successfully', user: safe });
+  } catch (error) {
+    console.error('updateMe failed:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 // @desc    Get all users with the 'delivery' role
 // @route   GET /api/users/delivery-partners
 // @access  Private/Admin

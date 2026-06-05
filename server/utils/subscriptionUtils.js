@@ -149,6 +149,35 @@ function buildDeliverySlotWindow(deliveryDate, deliverySlot) {
   };
 }
 
+// Count how many deliveries a subscription-like config will produce between its
+// startDate and an (exclusive of nothing — inclusive) endDate. Used to price a
+// "Subscribe & Save" commitment (originalPrice = perDelivery * count). Bounded
+// by a hard cap so a misconfigured schedule can never loop forever.
+function countDeliveriesInRange(subscription, startDate, endDate) {
+  const start = toUtcDateOnly(startDate || subscription?.startDate);
+  const end = toUtcDateOnly(endDate);
+  if (!start || !end || end < start) return 0;
+
+  const HARD_CAP = 2000; // ~5+ years of daily deliveries; safety valve only
+  let count = 0;
+  // Begin the search the day before start so an on-start delivery is included.
+  let cursor = addUtcDays(start, -1);
+
+  for (let i = 0; i < HARD_CAP; i += 1) {
+    let next;
+    try {
+      next = calculateNextDeliveryDate(subscription, cursor);
+    } catch (err) {
+      break; // unschedulable (e.g. fully paused range) — stop counting
+    }
+    if (!next || next > end) break;
+    count += 1;
+    cursor = next;
+  }
+
+  return count;
+}
+
 function getSchedulePreview(subscription, referenceDate = new Date(), count = 5) {
   const preview = [];
   let cursor = referenceDate;
@@ -168,6 +197,7 @@ module.exports = {
   buildDeliverySlotWindow,
   calculateInitialDeliveryDate,
   calculateNextDeliveryDate,
+  countDeliveriesInRange,
   getBaseNextDeliveryDate,
   getPlanFrequencyDays,
   getSchedulePreview,

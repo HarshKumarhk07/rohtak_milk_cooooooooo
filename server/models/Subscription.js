@@ -25,6 +25,30 @@ const billingSchema = new mongoose.Schema({
   paymentFailedCount: { type: Number, default: 0, min: 0 },
 }, { _id: false });
 
+// Pricing snapshot for a "Subscribe & Save" commitment. Captured at checkout so
+// the customer is shown — and charged — a stable price even if the admin later
+// edits the plan's discount. All amounts are in INR.
+const pricingSchema = new mongoose.Schema({
+  perDeliveryAmount: { type: Number, default: 0 }, // sum of item line-totals for ONE delivery
+  totalDeliveries: { type: Number, default: 0 },   // estimated deliveries over the commitment term
+  originalPrice: { type: Number, default: 0 },     // perDeliveryAmount * totalDeliveries (pre-discount)
+  discountPercentage: { type: Number, default: 0 },
+  discountedPrice: { type: Number, default: 0 },   // amount actually charged upfront
+}, { _id: false });
+
+// Upfront (prepaid) payment tracking for the commitment, mirroring the Order
+// model's wallet/Razorpay split so the existing checkout UX is reused verbatim.
+const subscriptionPaymentSchema = new mongoose.Schema({
+  status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  method: { type: String }, // 'Razorpay' | 'Wallet' | 'Hybrid'
+  walletAmountUsed: { type: Number, default: 0 },
+  razorpayAmount: { type: Number, default: 0 },
+  walletDebited: { type: Boolean, default: false },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  paidAt: { type: Date },
+}, { _id: false });
+
 const subscriptionSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   items: {
@@ -60,10 +84,37 @@ const subscriptionSchema = new mongoose.Schema({
   pauseUntil: { type: Date },
   status: {
     type: String,
-    enum: ['active', 'paused', 'cancelled', 'completed'],
+    // 'pending_payment' covers a subscription created but not yet paid for
+    // (upfront commitment). It is backward compatible — existing docs default
+    // to 'active' and are unaffected.
+    enum: ['pending_payment', 'active', 'paused', 'cancelled', 'completed'],
     default: 'active',
     index: true,
   },
+
+  // ---- Delivery details (where the recurring order is taken) ----
+  // Mirrors the Order model so the admin/delivery person knows exactly where to
+  // deliver every cycle. Required for any subscription created via checkout.
+  customerInfo: {
+    name: { type: String },
+    phone: { type: String },
+  },
+  shippingAddress: {
+    address: { type: String },
+    city: { type: String },
+    postalCode: { type: String },
+  },
+  customerLocation: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+  },
+
+  // ---- Subscribe & Save commitment (optional; absent on legacy subs) ----
+  subscriptionPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan' },
+  durationMonths: { type: Number },
+  endDate: { type: Date },
+  pricing: { type: pricingSchema, default: () => ({}) },
+  payment: { type: subscriptionPaymentSchema, default: () => ({}) },
   billing: {
     type: billingSchema,
     default: () => ({}),

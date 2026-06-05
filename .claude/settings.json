@@ -60,7 +60,16 @@
       "Bash(node -e \"const r=require\\('./package.json'\\); console.log\\('ROOT scripts:', JSON.stringify\\(r.scripts,null,1\\)\\)\")",
       "Bash(node -e \"const s=require\\('./server/package.json'\\); console.log\\('SERVER scripts:', JSON.stringify\\(s.scripts,null,1\\)\\)\")",
       "Bash(node testBrevoEmail.js)",
-      "Bash(node -e \"require\\('dotenv'\\).config\\({quiet:true}\\); require\\('./app.js'\\); console.log\\('Backend OK'\\);\")"
+      "Bash(node -e \"require\\('dotenv'\\).config\\({quiet:true}\\); require\\('./app.js'\\); console.log\\('Backend OK'\\);\")",
+      "Bash(node -e \"require\\('./app'\\); console.log\\('app.js loads OK'\\);\")",
+      "Bash(grep -iA3 \"MODULE_NOT_FOUND\\\\|Cannot find\\\\|Error:\")",
+      "Bash(node --test tests/unit/subscriptionUtils.test.js tests/unit/subscriptionModel.test.js tests/unit/subscriptionMigration.test.js)",
+      "Bash(node --test tests/unit/subscriptionPricing.test.js)",
+      "Bash(grep -iA6 \"Error\\\\|AssertionError\\\\|message:\\\\|expected\")",
+      "Bash(netstat -ano)",
+      "Bash(grep -n \"Commitment Plan\\\\|Subscribe & Pay\\\\|previewError\\\\|Summary\\\\|</div>\\\\s*$\" src/pages/SubscribePage.js)",
+      "Bash(node -e \"require\\('./controllers/subscriptionController'\\); require\\('./models/Subscription'\\); console.log\\('server OK'\\);\")",
+      "Bash(node -e \"require\\('./controllers/userController'\\); require\\('./models/User'\\); require\\('./routes/userRoutes'\\); console.log\\('user backend OK'\\);\")"
     ]
   }
 }

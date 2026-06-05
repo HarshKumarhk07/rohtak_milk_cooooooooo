@@ -57,7 +57,17 @@ const LoginRegisterPage = () => {
       await login(response.data);
       navigate("/");
     } catch (err) {
-      setLoginError(err.response?.data?.message || "Login failed");
+      const data = err.response?.data || {};
+      let msg = data.message || "Login failed";
+      // Admin progressive-lockout responses include extra context.
+      if (data.locked) {
+        // `message` already states the remaining lock time; reset the passkey step.
+        setNeedsSecretCode(false);
+        setLoginSecretCode("");
+      } else if (typeof data.attemptsRemaining === "number") {
+        msg += ` (${data.attemptsRemaining} attempt${data.attemptsRemaining === 1 ? "" : "s"} left before lock)`;
+      }
+      setLoginError(msg);
     } finally {
       setIsLoginSubmitting(false);
     }

@@ -42,6 +42,9 @@ import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import SubscribePage from "./pages/SubscribePage";
+import MySubscriptionsPage from "./pages/MySubscriptionsPage";
+import ProfilePage from "./pages/ProfilePage";
 import ComingSoonPopup from "./components/ComingSoonPopup";
 
 // Define the ScrollToTop component
@@ -88,6 +91,9 @@ function AppLayout() {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsConditionsPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/subscribe" element={<SubscribePage />} />
+          <Route path="/my-subscriptions" element={<MySubscriptionsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
       <Footer />

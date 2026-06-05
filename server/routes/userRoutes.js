@@ -4,6 +4,10 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
 
+// Logged-in user's own profile (name, phone, default delivery address).
+router.get('/me', protect, userController.getMe);
+router.put('/me', protect, userController.updateMe);
+
 router.get('/delivery-partners', protect, admin, userController.getAllDeliveryPartners);
 
 // Route to get all users (for admin dashboard)

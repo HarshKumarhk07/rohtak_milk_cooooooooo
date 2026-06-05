@@ -2,6 +2,7 @@
 
 const User = require('../models/User');
 const otpService = require('../services/otpService');
+const adminSecurity = require('../services/adminSecurityService');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
@@ -110,36 +111,31 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Lockout check for admins (5 times OTP limit)
-    if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
-    }
-
     if (user.role === 'admin') {
-      // Admin must provide BOTH otp and secretCode
+      // NOTE: a locked admin is still allowed to RESET their password — the
+      // reset link in the security-alert email is the legitimate escape hatch.
+      // The lock only blocks login, never the reset itself.
       const isOtpValid = user.resetPasswordOTP && user.resetPasswordOTP === otp && user.resetPasswordExpires > Date.now();
       const isSecretValid = secretCode && secretCode === process.env.ADMIN_SECRET_CODE;
 
       if (!isOtpValid || !isSecretValid) {
-        user.otpAttempts = (user.otpAttempts || 0) + 1;
-        if (user.otpAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
-          await user.save();
-          try {
-            await otpService.sendLockoutEmail(user.email);
-          } catch (mailErr) {
-            console.error('Failed to send lockout email', mailErr);
-          }
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+        // A bad reset attempt escalates the same lockout as login/passkey.
+        const result = await adminSecurity.recordFailedAttempt({ user, req, kind: 'password' });
+        if (result.locked) {
+          return res.status(403).json({
+            message: adminSecurity.lockedMessage(user),
+            locked: true,
+            lockLevel: result.lockLevel,
+            remainingMs: result.remainingMs,
+          });
         }
-        await user.save();
-        return res.status(400).json({ message: 'Invalid OTP or Secret Code' });
+        return res.status(400).json({
+          message: 'Invalid OTP or Secret Code',
+          attemptsRemaining: result.attemptsRemaining,
+        });
       }
-      
-      // Reset attempts on success
-      user.otpAttempts = 0;
     } else {
-      // Standard customer check
+      // Standard customer check — customers are NEVER locked out.
       if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || user.resetPasswordExpires < Date.now()) {
         return res.status(400).json({ message: 'Invalid or expired OTP' });
       }
@@ -148,10 +144,20 @@ exports.resetPassword = async (req, res) => {
     user.password = newPassword;
     user.resetPasswordOTP = undefined;
     user.resetPasswordExpires = undefined;
-    await user.save();
+
+    if (user.role === 'admin') {
+      // Successful reset fully clears the lockout (attempts + lockUntil + level)
+      // and grants immediate login — no waiting period.
+      await adminSecurity.resetLockState(user, { resetLevel: true, save: false });
+      await user.save();
+      await adminSecurity.logEvent({ user, eventType: 'PASSWORD_RESET', req, lockLevel: 0, details: 'Password reset; lockout cleared' });
+    } else {
+      await user.save();
+    }
 
     res.status(200).json({ message: 'Password reset successful' });
   } catch (error) {
+    console.error('resetPassword error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -163,63 +169,67 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Lockout check for admins (5 times limit)
-    if (user.role === 'admin' && user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: 'Too many attempts. Please try after 3 minutes' });
+    const isAdmin = user.role === 'admin';
+
+    // ── Admin lock gate ──────────────────────────────────────────────────
+    // Block login (NOT password reset) while the progressive lock is active.
+    // Customers/delivery users are never locked, so this only runs for admins.
+    if (isAdmin && adminSecurity.isLocked(user)) {
+      await adminSecurity.logEvent({ user, eventType: 'FAILED_LOGIN', req, details: 'Attempt while locked' });
+      return res.status(403).json({
+        message: adminSecurity.lockedMessage(user),
+        locked: true,
+        lockLevel: user.lockLevel || 0,
+        remainingMs: adminSecurity.remainingLockMs(user),
+      });
     }
 
+    // ── Step 1: password ────────────────────────────────────────────────
     const isMatch = await bcrypt.compare(password, user.password);
-    
     if (!isMatch) {
-      if (user.role === 'admin') {
-        user.loginAttempts = (user.loginAttempts || 0) + 1;
-        if (user.loginAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
-          await user.save();
-          
-          // Send notification email
-          try {
-            await otpService.sendLockoutEmail(user.email);
-          } catch (mailErr) {
-            console.error('Failed to send lockout email', mailErr);
-          }
-
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+      if (isAdmin) {
+        const result = await adminSecurity.recordFailedAttempt({ user, req, kind: 'password' });
+        if (result.locked) {
+          return res.status(403).json({
+            message: adminSecurity.lockedMessage(user),
+            locked: true,
+            lockLevel: result.lockLevel,
+            remainingMs: result.remainingMs,
+          });
         }
-        await user.save();
+        return res.status(400).json({ message: 'Invalid credentials', attemptsRemaining: result.attemptsRemaining });
       }
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Admin secret code check - Step 2
-    if (user.role === 'admin') {
+    // ── Step 2: admin secret passkey ────────────────────────────────────
+    if (isAdmin) {
       if (!secretCode) {
-        // Return a special status code indicating that we need the secret code
-        return res.status(202).json({ 
-          message: 'Password correct. Please enter Admin Secret Code to continue.', 
-          needsSecretCode: true 
+        return res.status(202).json({
+          message: 'Password correct. Please enter Admin Secret Code to continue.',
+          needsSecretCode: true,
         });
       }
 
       if (secretCode !== process.env.ADMIN_SECRET_CODE) {
-        user.loginAttempts = (user.loginAttempts || 0) + 1;
-        if (user.loginAttempts >= 5) {
-          user.lockUntil = Date.now() + 3 * 60 * 1000; // 3 mins lock
-          await user.save();
-          try { await otpService.sendLockoutEmail(user.email); } catch (e) {}
-          return res.status(403).json({ message: 'Too many attempts. Locked for 3 minutes' });
+        // Same progressive lockout applies to passkey failures (logged as PASSKEY_*).
+        const result = await adminSecurity.recordFailedAttempt({ user, req, kind: 'passkey' });
+        if (result.locked) {
+          return res.status(403).json({
+            message: adminSecurity.lockedMessage(user),
+            locked: true,
+            lockLevel: result.lockLevel,
+            remainingMs: result.remainingMs,
+          });
         }
-        await user.save();
-        return res.status(400).json({ message: 'Invalid Admin Secret Code' });
+        return res.status(400).json({ message: 'Invalid Admin Secret Code', attemptsRemaining: result.attemptsRemaining });
       }
     }
 
-    // Reset attempts on successful login
-    if (user.role === 'admin') {
-      user.loginAttempts = 0;
-      user.otpAttempts = 0;
-      user.lockUntil = undefined;
-      await user.save();
+    // ── Success ─────────────────────────────────────────────────────────
+    if (isAdmin) {
+      await adminSecurity.resetLockState(user, { resetLevel: true });
+      await adminSecurity.logEvent({ user, eventType: 'SUCCESSFUL_LOGIN', req, lockLevel: 0, details: 'Login successful' });
     }
 
     const accessToken = generateAccessToken(user);
@@ -237,6 +247,7 @@ exports.login = async (req, res) => {
       user: { id: user._id, email: user.email, role: user.role }
     });
   } catch (error) {
+    console.error('login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

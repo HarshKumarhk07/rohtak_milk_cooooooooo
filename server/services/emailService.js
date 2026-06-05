@@ -186,4 +186,60 @@ async function sendItemsUnavailableEmail({ to, customerName, products = [], refu
   return sendEmail({ to, toName: customerName, subject, html, text });
 }
 
-module.exports = { sendEmail, sendOrderCancelledEmail, sendItemsUnavailableEmail };
+/**
+ * Security alert sent to an admin when their account is locked after repeated
+ * failed login OR passkey attempts. Includes a secure password-reset link.
+ * @param {Object} opts
+ * @param {string} opts.to          - admin email
+ * @param {string} [opts.adminName]
+ * @param {string} opts.resetLink   - link to the password reset page
+ * @param {string} [opts.lockLabel] - human label e.g. "15 minutes"
+ * @param {string} [opts.ipAddress]
+ * @param {string} [opts.userAgent]
+ * @param {string} [opts.reason]    - 'password' | 'passkey'
+ */
+async function sendAdminSecurityAlertEmail({ to, adminName, resetLink, lockLabel, ipAddress, userAgent, reason }) {
+  const subject = 'Security Alert - Rohtak Milk Admin Panel';
+
+  const attemptType = reason === 'passkey' ? 'admin secret passkey' : 'password';
+
+  const text =
+    `We detected more than 4 unsuccessful login attempts on your admin account.\n\n` +
+    `If this was not you, please change your password immediately.\n\n` +
+    (lockLabel ? `Your account has been temporarily locked for ${lockLabel}.\n\n` : '') +
+    `Reset your password securely: ${resetLink}\n\n` +
+    `Attempt type: ${attemptType}\n` +
+    (ipAddress ? `IP Address: ${ipAddress}\n` : '') +
+    (userAgent ? `Device: ${userAgent}\n` : '') +
+    `\nRegards,\nRohtak Milk Company Security`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px;">
+      <h1 style="color: #c0392b; text-align: center; font-size: 22px;">Security Alert - Rohtak Milk Admin Panel</h1>
+      <p style="font-size: 15px; color: #333;">Hello <strong>${adminName || 'Admin'}</strong>,</p>
+      <p style="font-size: 15px; color: #333; line-height: 1.6;">
+        We detected <strong>more than 4 unsuccessful login attempts</strong> on your admin account.
+      </p>
+      <p style="font-size: 15px; color: #333; line-height: 1.6;">
+        If this was not you, please <strong>change your password immediately</strong>.
+      </p>
+      ${lockLabel ? `<div style="background-color:#fceae9;padding:14px;border-radius:10px;margin:16px 0;text-align:center;">
+        <p style="margin:0;font-size:14px;color:#c0392b;">Your account has been temporarily locked for <strong>${lockLabel}</strong>.</p>
+      </div>` : ''}
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${resetLink}" style="background-color:#2e7d32;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">Reset Password</a>
+      </div>
+      <div style="background-color:#f7f9fb;padding:14px;border-radius:10px;margin:14px 0;font-size:13px;color:#555;">
+        <p style="margin:0 0 6px;"><strong>Attempt type:</strong> ${attemptType}</p>
+        ${ipAddress ? `<p style="margin:0 0 6px;"><strong>IP Address:</strong> ${ipAddress}</p>` : ''}
+        ${userAgent ? `<p style="margin:0;"><strong>Device:</strong> ${userAgent}</p>` : ''}
+      </div>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+      <p style="font-size: 13px; color: #888;">Regards,<br/><strong>Rohtak Milk Company Security</strong></p>
+    </div>
+  `;
+
+  return sendEmail({ to, toName: adminName, subject, html, text });
+}
+
+module.exports = { sendEmail, sendOrderCancelledEmail, sendItemsUnavailableEmail, sendAdminSecurityAlertEmail };

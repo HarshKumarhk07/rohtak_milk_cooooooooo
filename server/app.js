@@ -79,8 +79,16 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
+const adminSecurityRoutes = require('./routes/adminSecurityRoutes');
 
 const app = express();
+
+// Trust the first proxy (Vercel/Render/Nginx) so req.ip reflects the real client
+// IP for the admin security audit log rather than the proxy address.
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
@@ -121,6 +129,10 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/subscription-plans', subscriptionPlanRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/admin-security', adminSecurityRoutes);
 
 // Test route
 app.get('/', (req, res) => {

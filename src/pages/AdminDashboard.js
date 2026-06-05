@@ -15,6 +15,10 @@ import CompletedCancelledRequests from '../components/CompletedCancelledRequests
 import AssignedPickups from './AssignedPickups';
 import AppointmentManagement from '../components/AppointmentManagement';
 import FranchiseStockManagement from '../components/FranchiseStockManagement';
+import SubscriptionPlanManagement from '../components/SubscriptionPlanManagement';
+import SubscriptionManagement from '../components/SubscriptionManagement';
+import AnnouncementBannerManagement from '../components/AnnouncementBannerManagement';
+import AdminSecurityDashboard from '../components/AdminSecurityDashboard';
 
 
 const AdminDashboard = () => {
@@ -246,6 +250,10 @@ const AdminDashboard = () => {
                     <button onClick={() => setActiveTab('cancelledReturns')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'cancelledReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled Returns</button>
                     <button onClick={() => setActiveTab('appointments')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'appointments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Appointments</button>
                     <button onClick={() => setActiveTab('franchise')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'franchise' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Franchise</button>
+                    <button onClick={() => setActiveTab('subscriptions')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'subscriptions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Subscriptions</button>
+                    <button onClick={() => setActiveTab('subscriptionPlans')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'subscriptionPlans' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Subscription Plans</button>
+                    <button onClick={() => setActiveTab('banners')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'banners' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Banners</button>
+                    <button onClick={() => setActiveTab('security')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'security' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Security</button>
 
                 </nav>
             </div>
@@ -443,6 +451,10 @@ const AdminDashboard = () => {
             {activeTab === 'cancelledOrders' && <CancelledOrders refreshFlag={refreshFlag} />}
             {activeTab === 'appointments' && <AppointmentManagement />}
             {activeTab === 'franchise' && <FranchiseStockManagement />}
+            {activeTab === 'subscriptions' && <SubscriptionManagement />}
+            {activeTab === 'subscriptionPlans' && <SubscriptionPlanManagement />}
+            {activeTab === 'banners' && <AnnouncementBannerManagement />}
+            {activeTab === 'security' && <AdminSecurityDashboard />}
 
 
             {showAssignModal && (

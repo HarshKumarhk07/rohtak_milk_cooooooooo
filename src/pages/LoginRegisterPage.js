@@ -264,7 +264,7 @@ const LoginRegisterPage = () => {
                 </button>
               </div>
               <div className="forgot-pass" style={{ textAlign: "right", marginTop: "15px", marginBottom: "15px" }}>
-                <Link to="/forgot-password" style={{ color: "white", fontSize: "14px", textDecoration: "none" }}>Forgot Password?</Link>
+                <Link to="/forgot-password" style={{ color: "#ffd43b", fontSize: "14px", fontWeight: 700, textDecoration: "underline" }}>Forgot Password?</Link>
               </div>
 
               {/* 🔹 Divider + Continue with Google */}

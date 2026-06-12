@@ -101,6 +101,10 @@ const allowedOrigins = [
   "https://www.rohtakmilkcompany.in",
   "http://rohtakmilkcompany.in",
   "http://www.rohtakmilkcompany.in",
+  "https://rohtakdairycompany.com",
+  "https://www.rohtakdairycompany.com",
+  "http://rohtakdairycompany.com",
+  "http://www.rohtakdairycompany.com",
   "https://rohtak-milk-cooooooooo.vercel.app"
 ];
 

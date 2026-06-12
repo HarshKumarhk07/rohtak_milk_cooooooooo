@@ -69,7 +69,9 @@
       "Bash(netstat -ano)",
       "Bash(grep -n \"Commitment Plan\\\\|Subscribe & Pay\\\\|previewError\\\\|Summary\\\\|</div>\\\\s*$\" src/pages/SubscribePage.js)",
       "Bash(node -e \"require\\('./controllers/subscriptionController'\\); require\\('./models/Subscription'\\); console.log\\('server OK'\\);\")",
-      "Bash(node -e \"require\\('./controllers/userController'\\); require\\('./models/User'\\); require\\('./routes/userRoutes'\\); console.log\\('user backend OK'\\);\")"
+      "Bash(node -e \"require\\('./controllers/userController'\\); require\\('./models/User'\\); require\\('./routes/userRoutes'\\); console.log\\('user backend OK'\\);\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); console.log\\(process.env.ADMIN_SECRET_CODE ? 'ADMIN_SECRET_CODE = '+process.env.ADMIN_SECRET_CODE : 'NOT SET'\\);\")",
+      "Bash(node -e \"const {allowedOrigins}=require\\('./app'\\); console.log\\('OK. Origins:'\\); allowedOrigins.forEach\\(o=>console.log\\(' -',o\\)\\);\")"
     ]
   }
 }
